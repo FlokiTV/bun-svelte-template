@@ -9,7 +9,7 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 ## Board e card
 - Board: board_0d8d387a-ee3a-41f9-9a3a-d7e25085d0a6 — bun-svelte-template — Security & production hardening v2
 - Status: active
-- Card atual: task_1004531d-0f7a-45b4-90a5-9a8a96d62f06 — 08 — Supply-chain: audit e upgrades patch/minor — concluindo.
+- Card atual: task_cf8b839a-eabf-42d1-87d9-dae16b074ec4 — 09 — Upgrade major deliberado do stack — aguardando CI remota.
 
 ## Estado de partida
 - main sincronizada com origin/main.
@@ -34,7 +34,7 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 Cada card termina com testes/gates relevantes verdes e commit próprio antes de avançar.
 
 ## Próximo passo exato
-Commitar e fechar o card 08; iniciar o card 09 para testar SvelteKit 3, adapter-static 4 e TypeScript 7, mantendo apenas os majors que passarem todos os gates.
+Commitar/push do card 09, exigir CI Linux verde e então executar documentação/gates/push final do card 10.
 
 ### Card 01 — refresh cookie deletion
 - set/clear centralizados em auth.cookie.ts.
@@ -109,7 +109,7 @@ Commitar e fechar o card 08; iniciar o card 09 para testar SvelteKit 3, adapter-
 - bun run test:e2e: 4/4 PASS.
 - primeira CI PostgreSQL 17 falhou em 0000 porque PostgreSQL vanilla não possui roles Supabase anon/authenticated.
 - correção: db:migrate prepara anon/authenticated como NOLOGIN somente quando ausentes, sem editar migration aplicada.
-- verify/E2E após a correção: PASS; nova CI PostgreSQL 17 será exigida antes de fechar o card.
+- verify/E2E após a correção: PASS; CI 37483860228 passou database, quality e e2e.
 
 
 ### Card 07 — PostgreSQL real
@@ -132,3 +132,18 @@ Commitar e fechar o card 08; iniciar o card 09 para testar SvelteKit 3, adapter-
 - exceções documentadas em docs/SECURITY.md: cookie@0.6.0 low (SvelteKit 2) e esbuild@0.18.20 moderate (Drizzle Kit tooling).
 - bun run verify: PASS.
 - bun run test:e2e: 4/4 PASS.
+
+
+### Card 09 — majors deliberados
+- SvelteKit atualizado de 2.70.3 para 3.0.1.
+- adapter-static atualizado de 3.0.10 para 4.0.0.
+- configuração do adapter migrou de svelte.config.js para sveltekit({ adapter }) em vite.config.ts conforme o novo modelo.
+- aliases internos migraram de $lib para package imports #lib.
+- tsconfig web migrou para extends "$app/tsconfig".
+- architecture/doctor atualizados para validar vite.config.ts e fallback 200.html.
+- frontend check: 0 erros/0 warnings; testes 13/13 PASS; build estático PASS.
+- architecture:check PASS; doctor sem bloqueios; audit:ci PASS.
+- advisory cookie@0.6.0 foi eliminado pelo SvelteKit 3; resta apenas esbuild moderado na cadeia de tooling Drizzle.
+- TypeScript 7 adiado: SvelteKit 3.0.1 declara peer TypeScript ^6.0.0 e svelte-check 4.7.6 declara ^5 || ^6; manter TS 6.0.3 evita combinação oficialmente não suportada.
+- script web check passa a invocar svelte-check via Node com heap 4096 MB para evitar OOM intermitente no ambiente Windows.
+- verify/E2E locais completos ficaram impedidos nesta máquina por pagefile/heap do Windows, apesar de checks isolados passarem; CI Linux será o gate definitivo.

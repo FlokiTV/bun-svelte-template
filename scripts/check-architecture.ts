@@ -77,9 +77,12 @@ if (!layout.includes("export const ssr = false")) {
   failures.push("apps/web/src/routes/+layout.ts must export `ssr = false`");
 }
 
-const svelteConfig = await readFile(join(root, "apps", "web", "svelte.config.js"), "utf8");
-if (!svelteConfig.includes("@sveltejs/adapter-static")) {
+const viteConfig = await readFile(join(root, "apps", "web", "vite.config.ts"), "utf8");
+if (!viteConfig.includes("@sveltejs/adapter-static")) {
   failures.push("apps/web must use @sveltejs/adapter-static");
+}
+if (!viteConfig.includes('fallback: "200.html"')) {
+  failures.push('apps/web must configure adapter-static fallback: "200.html"');
 }
 
 if (failures.length > 0) {

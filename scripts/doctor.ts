@@ -20,7 +20,7 @@ const requiredFiles = [
   "PROJECT.md",
   "ai/project.json",
   "docker-compose.yml",
-  "apps/web/svelte.config.js",
+  "apps/web/vite.config.ts",
   "apps/api/src/app.ts",
 ];
 for (const path of requiredFiles) {

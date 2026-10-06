@@ -1,7 +1,7 @@
 <script lang="ts">
 import { onMount } from "svelte";
-import { getHealth } from "$lib/api/client";
-import ApiStatus from "$lib/components/ApiStatus.svelte";
+import { getHealth } from "#lib/api/client.ts";
+import ApiStatus from "#lib/components/ApiStatus.svelte";
 
 let apiState = $state<"loading" | "online" | "offline">("loading");
 let latencyMs = $state<number | undefined>(undefined);
