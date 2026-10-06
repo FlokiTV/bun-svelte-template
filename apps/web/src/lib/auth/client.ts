@@ -2,6 +2,18 @@ import type { AuthMeResponse, AuthSessionResponse } from "@vibe/contracts";
 
 const apiBaseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000/api/v1";
 
+function trustedApiUrl(input: string | URL): URL {
+  const browserOrigin = typeof window === "undefined" ? "http://localhost" : window.location.origin;
+  const base = new URL(apiBaseUrl.endsWith("/") ? apiBaseUrl : `${apiBaseUrl}/`, browserOrigin);
+  const target = input instanceof URL ? input : new URL(input, base);
+
+  if (target.origin !== base.origin) {
+    throw new Error("authFetch only accepts requests to the configured API origin");
+  }
+
+  return target;
+}
+
 let accessToken: string | null = null;
 
 export function getAccessToken(): string | null {
@@ -64,10 +76,11 @@ export async function logout(): Promise<void> {
 }
 
 export async function authFetch(input: string | URL, init: RequestInit = {}): Promise<Response> {
+  const target = trustedApiUrl(input);
   const headers = new Headers(init.headers);
   if (accessToken) headers.set("authorization", `Bearer ${accessToken}`);
 
-  let response = await fetch(input, {
+  let response = await fetch(target, {
     ...init,
     headers,
     credentials: "include",
@@ -85,7 +98,7 @@ export async function authFetch(input: string | URL, init: RequestInit = {}): Pr
   const retryHeaders = new Headers(init.headers);
   if (accessToken) retryHeaders.set("authorization", `Bearer ${accessToken}`);
 
-  response = await fetch(input, {
+  response = await fetch(target, {
     ...init,
     headers: retryHeaders,
     credentials: "include",

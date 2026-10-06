@@ -9,7 +9,7 @@ Executar todos os ajustes do board, sempre commitando as mudanças e testando tu
 ## Board e card
 - Board: board_4bc8a982-5a76-4ded-8544-6c66bcfcc27c — bun-svelte-template — Auth hardening & review follow-up
 - Status: active
-- Card atual: task_e7d9a6c3-e9a1-4394-9f50-f2add39df746 — 01 — Restaurar baseline determinístico do workspace — in_progress.
+- Card atual: task_60211eee-ee09-4ff9-906b-1ce1542d2dd1 — 02 — Restringir authFetch à origin confiável da API — in_progress.
 
 ## Terminais gerenciados
 - Nenhum terminal ativo/relevante deste workspace nesta rodada.
@@ -39,6 +39,8 @@ Board criado com a seguinte ordem:
 - AGENT_CONTEXT.md — sincronizado com execução e validações.
 - apps/api/package.json — peers/tipos explícitos para o linker isolado: @sinclair/typebox e bun-types.
 - bun.lock — importador da API atualizado; versões existentes preservadas.
+- apps/web/src/lib/auth/client.ts — authFetch falha fechado para origins diferentes da API configurada.
+- apps/web/src/lib/auth/client.test.ts — regressões para origin externa, relativa, default e VITE_API_URL customizada.
 
 ## Validações
 Card 01 — baseline determinístico:
@@ -50,8 +52,14 @@ Card 01 — baseline determinístico:
 - Playwright Chromium 1243 instalado localmente na máquina para viabilizar o E2E.
 - Causa do baseline quebrado: workspaces com node_modules stale e dependências de peer/tipos implícitas sob o linker isolado do Bun 1.4.2.
 
+Card 02 — trusted origin:
+- testes web: 5/5 PASS.
+- bun run verify: PASS.
+- bun run test:e2e: 2/2 PASS.
+- authFetch rejeita origin externa antes de anexar Authorization ou credentials.
+
 ## Bloqueios
 - Nenhum bloqueio atual. Baseline reproduzível restaurado e gates verdes.
 
 ## Próximo passo exato
-Fechar o card 01 após o commit do baseline e iniciar o card 02 para restringir authFetch à origin confiável da API.
+Commitar e fechar o card 02; iniciar o card 03 para implementar refresh JWT single-flight com teste concorrente determinístico.
