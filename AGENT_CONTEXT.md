@@ -36,20 +36,22 @@ Board criado com a seguinte ordem:
 8. Gate final, documentação e readiness do template.
 
 ## Arquivos alterados
-- AGENT_CONTEXT.md — sincronizado com o novo board e o plano atual.
-- Nenhum arquivo de código foi alterado.
+- AGENT_CONTEXT.md — sincronizado com execução e validações.
+- apps/api/package.json — peers/tipos explícitos para o linker isolado: @sinclair/typebox e bun-types.
+- bun.lock — importador da API atualizado; versões existentes preservadas.
 
 ## Validações
-Revisão anterior desta rodada:
-- git status --short --branch: main...origin/main, limpo.
-- bun --version: 1.4.0; packageManager do projeto: bun@1.4.2.
-- bun run verify: architecture PASS, secrets PASS, interrompido no lint por dependências locais ausentes.
-- bun.lock contém as dependências transitivas que faltam localmente, compatível com instalação incompleta e não necessariamente lockfile defeituoso.
-- Checks/testes/builds parciais também bloquearam por dependências ausentes nos node_modules locais.
+Card 01 — baseline determinístico:
+- Bun 1.4.2 executado de forma isolada via bunx, sem alterar instalação global.
+- bun install --frozen-lockfile: PASS após limpeza das árvores node_modules stale.
+- bun run doctor: PASS; avisos apenas .env ausente, Docker ausente e DB check opcional não executado.
+- bun run verify: PASS — architecture, secrets, Biome, typecheck, API 19/19, web 1/1, OpenAPI 11 paths e builds.
+- bun run test:e2e: PASS — mobile-chromium e desktop-chromium, 2/2.
+- Playwright Chromium 1243 instalado localmente na máquina para viabilizar o E2E.
+- Causa do baseline quebrado: workspaces com node_modules stale e dependências de peer/tipos implícitas sob o linker isolado do Bun 1.4.2.
 
 ## Bloqueios
-- Nenhum bloqueio de planejamento.
-- Para implementação/validação confiável, primeiro restaurar o ambiente com Bun 1.4.2 e instalação frozen coerente com bun.lock.
+- Nenhum bloqueio atual. Baseline reproduzível restaurado e gates verdes.
 
 ## Próximo passo exato
-Restaurar o baseline determinístico com Bun 1.4.2 e instalação frozen; rodar doctor/verify/E2E, registrar o resultado e commitar antes de avançar para o card 02.
+Fechar o card 01 após o commit do baseline e iniciar o card 02 para restringir authFetch à origin confiável da API.
