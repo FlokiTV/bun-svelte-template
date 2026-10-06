@@ -1,7 +1,7 @@
 import type { AuthMeResponse, AuthSessionResponse } from "@vibe/contracts";
 import { readJsonResponse } from "../api/request";
 
-const apiBaseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000/api/v1";
+const apiBaseUrl = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3000/api/v1";
 
 function trustedApiUrl(input: string | URL): URL {
   const browserOrigin = typeof window === "undefined" ? "http://localhost" : window.location.origin;
