@@ -28,6 +28,7 @@
     "gen:event": "bun scripts/new-event.ts",
     "openapi:check": "bun --filter '@vibe/api' openapi:check",
     "secrets:check": "bun scripts/secret-scan.ts",
+    "audit:ci": "bun audit --audit-level=high",
     "db:up": "bun scripts/db-local.ts up",
     "db:down": "bun scripts/db-local.ts down",
     "db:reset": "bun scripts/db-local.ts reset",
@@ -36,7 +37,7 @@
     "db:seed": "bun --filter '@vibe/api' db:seed"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.14",
+    "@biomejs/biome": "2.5.15",
     "@playwright/test": "1.63.0",
     "@types/bun": "1.4.2",
     "typescript": "6.0.3"

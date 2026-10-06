@@ -9,7 +9,7 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 ## Board e card
 - Board: board_0d8d387a-ee3a-41f9-9a3a-d7e25085d0a6 — bun-svelte-template — Security & production hardening v2
 - Status: active
-- Card atual: task_3b8ab543-ac5a-4665-8a4d-a870f5f40a5a — 07 — CI com PostgreSQL real e migrations — aguardando CI remota.
+- Card atual: task_1004531d-0f7a-45b4-90a5-9a8a96d62f06 — 08 — Supply-chain: audit e upgrades patch/minor — concluindo.
 
 ## Estado de partida
 - main sincronizada com origin/main.
@@ -34,7 +34,7 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 Cada card termina com testes/gates relevantes verdes e commit próprio antes de avançar.
 
 ## Próximo passo exato
-Commitar/push do card 07, confirmar o job database em PostgreSQL 17 real e então iniciar supply-chain/audit do card 08.
+Commitar e fechar o card 08; iniciar o card 09 para testar SvelteKit 3, adapter-static 4 e TypeScript 7, mantendo apenas os majors que passarem todos os gates.
 
 ### Card 01 — refresh cookie deletion
 - set/clear centralizados em auth.cookie.ts.
@@ -119,5 +119,16 @@ Commitar/push do card 07, confirmar o job database em PostgreSQL 17 real e entã
 - fluxo validado localmente via PostgreSQL wire-compatible temporário: register -> me -> refresh -> replay revoga família -> descendant rejeitado -> login -> logout -> refresh rejeitado.
 - apps/api/tsconfig.json inclui tests/**/*.ts.
 - drizzle-kit check: PASS; YAML CI: PASS.
+- bun run verify: PASS.
+- bun run test:e2e: 4/4 PASS.
+
+
+### Card 08 — supply-chain e patches/minors
+- CI executa bun run audit:ci e bloqueia advisories high/critical.
+- upgrades aplicados: Biome 2.5.15, jsdom 30.1.2, Svelte 5.57.2, Vite 8.3.3 e Vitest 5.0.3.
+- Biome 2.5.15 exigiu apenas atualização de schema e formatação determinística em dois arquivos Svelte/package manifests.
+- bun install --frozen-lockfile: PASS.
+- bun run audit:ci: PASS; 2 advisories abaixo do threshold.
+- exceções documentadas em docs/SECURITY.md: cookie@0.6.0 low (SvelteKit 2) e esbuild@0.18.20 moderate (Drizzle Kit tooling).
 - bun run verify: PASS.
 - bun run test:e2e: 4/4 PASS.

@@ -62,10 +62,10 @@ onMount(() => {
 
     <section class="grid grid-cols-1 gap-3 md:grid-cols-3">
       {#each [
-   ["Frontend", "Svelte 5 + Tailwind 4, sem SSR."],
-   ["Backend", "Bun + Elysia + OpenAPI."],
-   ["Qualidade", "Biome, testes unitários e Playwright."],
- ] as item}
+        ["Frontend", "Svelte 5 + Tailwind 4, sem SSR."],
+        ["Backend", "Bun + Elysia + OpenAPI."],
+        ["Qualidade", "Biome, testes unitários e Playwright."],
+      ] as item}
         <article class="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
           <h2 class="font-medium text-white">{item[0]}</h2>
           <p class="mt-2 text-sm leading-6 text-white/50">{item[1]}</p>

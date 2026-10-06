@@ -30,6 +30,16 @@ The provided browser helper treats the configured API origin as the authenticati
 
 Concurrent expired requests share one refresh operation because refresh sessions rotate on use. Each protected request retries at most once after a successful refresh.
 
+## Dependency audit
+CI runs `bun run audit:ci`, which blocks high and critical advisories.
+
+Lower-severity transitives are still reviewed explicitly. Current known exceptions:
+
+- `cookie@0.6.0` through SvelteKit 2: low severity. In this template SvelteKit is built as a static SPA with SSR disabled, so this package is not a production server runtime.
+- `esbuild@0.18.20` through Drizzle Kit's legacy loader chain: moderate severity. Drizzle Kit is a development/migration tool and is not part of the production API runtime bundle.
+
+Do not expose local development servers to untrusted networks. Reassess these exceptions whenever SvelteKit, Drizzle Kit, or their transitive chains change.
+
 ## Secrets
 Never commit production `.env` files, private keys, tokens or credentials. CI uses frozen dependencies and secret scanning, but reviewers must still inspect changes.
 

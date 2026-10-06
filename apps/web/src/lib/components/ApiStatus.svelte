@@ -24,11 +24,11 @@ const labels: Record<State, string> = {
   <div class="flex min-w-0 items-center gap-3">
     <span
       class={[
-  "size-2.5 shrink-0 rounded-full",
-  state === "online" && "bg-emerald-400",
-  state === "loading" && "bg-amber-300",
-  state === "offline" && "bg-red-400",
-]}
+        "size-2.5 shrink-0 rounded-full",
+        state === "online" && "bg-emerald-400",
+        state === "loading" && "bg-amber-300",
+        state === "offline" && "bg-red-400",
+      ]}
     ></span>
 
     <span class="truncate text-sm font-medium text-white">{labels[state]}</span>
