@@ -6,6 +6,9 @@ The template ships with conservative defaults, not a complete security program.
 - validated startup configuration;
 - production JWT secret length checks;
 - HttpOnly refresh cookie architecture;
+- browser auth helper restricted to the configured API origin before sending Bearer tokens or cookies;
+- single-flight refresh handling for rotated refresh sessions;
+- logout generation guard so an in-flight refresh cannot restore local auth state after logout;
 - configurable CORS allow-list;
 - common security response headers;
 - Bun/Elysia request body size limit;
@@ -22,8 +25,12 @@ The template ships with conservative defaults, not a complete security program.
 ## Rate-limit warning
 The built-in rate limiter is process-local. It is appropriate as a baseline and for single-instance deployments. Multi-instance deployments that require consistent limits must use a shared store.
 
+## Browser auth boundary
+The provided browser helper treats the configured API origin as the authentication boundary. Authenticated requests to another origin are rejected before credentials are attached. Keep third-party HTTP calls on a separate unauthenticated client.
+
+Concurrent expired requests share one refresh operation because refresh sessions rotate on use. Each protected request retries at most once after a successful refresh.
+
 ## Secrets
 Never commit production `.env` files, private keys, tokens or credentials. CI uses frozen dependencies and secret scanning, but reviewers must still inspect changes.
-
 
 For repositories that need full Git-history secret scanning, add the organization-approved scanner separately. The base template avoids a vendor-specific CI action or license requirement.

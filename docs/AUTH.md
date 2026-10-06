@@ -73,11 +73,20 @@ bun --filter '@vibe/api' db:migrate
 
 `apps/web/src/lib/auth/client.ts` provides a minimal framework-independent client for login, register, refresh, logout, `/me`, and authenticated fetches.
 
+The client intentionally:
+
+- keeps the access token only in memory;
+- rejects authenticated requests whose URL origin differs from the configured API origin before attaching the Bearer token or cookies;
+- coalesces concurrent `401` responses into a single refresh request, then retries each original request at most once;
+- clears local auth state immediately on logout and prevents an in-flight refresh from restoring a token after logout;
+- preserves the API error contract through `ApiError`, including HTTP status, stable error code, message, and request ID.
+
 It deliberately does not provide login screens or product-specific session UI.
 
 ## Security notes
 
 - Do not store the access token in localStorage in the provided pattern.
+- Keep authenticated browser calls scoped to the configured API origin; do not bypass `authFetch` with ad-hoc Bearer handling.
 - Keep refresh cookies HttpOnly.
 - Restrict CORS to known frontend origins.
 - Use HTTPS in production.

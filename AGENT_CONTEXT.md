@@ -8,8 +8,8 @@ Executar todos os ajustes do board, sempre commitando as mudanças e testando tu
 
 ## Board e card
 - Board: board_4bc8a982-5a76-4ded-8544-6c66bcfcc27c — bun-svelte-template — Auth hardening & review follow-up
-- Status: active
-- Card atual: task_d67c589e-506d-49bc-9675-6ac6c129ba13 — 07 — Remover índice redundante de users.email com migration nova — in_progress.
+- Status: done
+- Card final: task_5f867538-409a-43e9-afa0-2c5006e31924 — 08 — Gate final, documentação e readiness do template — done.
 
 ## Terminais gerenciados
 - Nenhum terminal ativo/relevante deste workspace nesta rodada.
@@ -88,10 +88,10 @@ Card 03 — refresh single-flight:
 - bun run test:e2e: 2/2 PASS.
 
 ## Bloqueios
-- Nenhum bloqueio atual. Baseline reproduzível restaurado e gates verdes.
+- Nenhum bloqueio de release. `doctor` apenas avisa que `apps/api/.env` e Docker não estão presentes, portanto o check opcional de conectividade PostgreSQL local foi pulado.
 
 ## Próximo passo exato
-Commitar e fechar o card 07; iniciar o card 08 para revisão final de documentação e execução de frozen install, doctor, verify, E2E, OpenAPI/build e Git clean.
+Nenhum ajuste pendente neste board. Próxima ação opcional: push dos commits para origin/main quando desejado.
 
 
 ### Card 06 — cobertura de autenticação
@@ -112,3 +112,15 @@ Commitar e fechar o card 07; iniciar o card 08 para revisão final de documenta�
 - Docker/Postgres nativo e Supabase remoto não estavam disponíveis nesta máquina; a validação descartável foi feita fora do repositório e o diretório temporário foi removido.
 - bun run verify: PASS.
 - bun run test:e2e: 4/4 PASS.
+
+
+### Card 08 — gate final e readiness
+- docs/AUTH.md atualizado com token em memória, trusted API origin, refresh single-flight, logout hardening e ApiError.
+- docs/SECURITY.md atualizado com boundary de origin, refresh single-flight e proteção contra refresh pós-logout.
+- bun install --frozen-lockfile com Bun 1.4.2: PASS, sem mudanças.
+- bun run doctor: PASS sem bloqueios.
+- bun run verify: PASS.
+- bun run test:e2e: 4/4 PASS.
+- bun run openapi:check: PASS, 11 paths documentados.
+- bun run build: PASS para config, contracts, API e web.
+- artefato incidental supabase/.temp/cli-latest revertido.
