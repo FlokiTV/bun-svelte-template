@@ -108,3 +108,14 @@ Commitar/push do card 07, confirmar o job database em PostgreSQL 17 real e entã
 - bun run verify: PASS.
 - bun run test:e2e: 4/4 PASS.
 - validação PostgreSQL 17 real será confirmada pelo GitHub Actions após o push deste commit.
+
+
+### Card 07 — PostgreSQL real
+- job database na CI com postgres:17-alpine, healthcheck e frozen install.
+- CI aplica todas as migrations, roda db:check e test:db.
+- teste DB explícito usa repository/Drizzle real, sem mock.
+- fluxo validado localmente via PostgreSQL wire-compatible temporário: register -> me -> refresh -> replay revoga família -> descendant rejeitado -> login -> logout -> refresh rejeitado.
+- apps/api/tsconfig.json inclui tests/**/*.ts.
+- drizzle-kit check: PASS; YAML CI: PASS.
+- bun run verify: PASS.
+- bun run test:e2e: 4/4 PASS.

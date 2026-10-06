@@ -9,11 +9,11 @@
     "check": "tsc --noEmit",
     "test": "bun test",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "bun scripts/prepare-migrations.ts && drizzle-kit migrate",
     "db:check": "bun scripts/check-db.ts",
     "db:seed": "bun scripts/seed.ts",
     "openapi:check": "bun scripts/check-openapi.ts",
-    "test:db": "bun test tests/auth.postgres.integration.ts"
+    "test:db": "bun test ./tests/auth.postgres.integration.ts"
   },
   "dependencies": {
     "@elysiajs/cors": "1.4.2",
