@@ -9,7 +9,7 @@ Executar todos os ajustes do board, sempre commitando as mudanças e testando tu
 ## Board e card
 - Board: board_4bc8a982-5a76-4ded-8544-6c66bcfcc27c — bun-svelte-template — Auth hardening & review follow-up
 - Status: active
-- Card atual: task_0a4c5acd-2d55-4cbe-b89e-63cf819d5451 — 05 — Unificar erros de auth com o contrato ApiError — in_progress.
+- Card atual: task_71285449-1c21-4705-bedf-2b41b2119fa1 — 06 — Ampliar cobertura de autenticação no frontend e E2E — in_progress.
 
 ## Terminais gerenciados
 - Nenhum terminal ativo/relevante deste workspace nesta rodada.
@@ -42,6 +42,7 @@ Board criado com a seguinte ordem:
 - apps/web/src/lib/auth/client.ts — authFetch falha fechado para origins diferentes da API configurada.
 - apps/web/src/lib/auth/client.test.ts — regressões para origin, refresh, logout e ApiError.
 - apps/web/src/lib/api/request.ts — readJsonResponse compartilhado para preservar ApiError.
+- tests/e2e/auth-client.spec.ts — journey browser real login → 401 → refresh → retry → logout, sem UI de login nem banco real.
 
 ## Validações
 Card 01 — baseline determinístico:
@@ -88,4 +89,13 @@ Card 03 — refresh single-flight:
 - Nenhum bloqueio atual. Baseline reproduzível restaurado e gates verdes.
 
 ## Próximo passo exato
-Commitar e fechar o card 05; iniciar o card 06 para ampliar cobertura do auth, incluindo um E2E de cliente em browser sem exigir UI de login ou banco real.
+Commitar e fechar o card 06; iniciar o card 07 para confirmar e remover o índice redundante de users.email via migration incremental, sem alterar a migration 0000.
+
+
+### Card 06 — cobertura de autenticação
+- register/login mantêm access token apenas em memória; localStorage não é usado.
+- unitários cobrem 401 → refresh → retry, refresh concorrente single-flight, origin externa, logout sob falha e ApiError.
+- testes web: 13/13 PASS.
+- E2E auth em browser real: login → /me 401 → 1 refresh → retry com token novo → logout; validado em mobile e desktop.
+- bun run verify: PASS.
+- bun run test:e2e: 4/4 PASS.

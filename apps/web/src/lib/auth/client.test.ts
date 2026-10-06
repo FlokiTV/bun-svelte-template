@@ -1,7 +1,7 @@
 import type { AuthSessionResponse } from "@vibe/contracts";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { ApiError } from "../api/errors";
-import { authFetch, clearAccessToken, getAccessToken, login, logout } from "./client";
+import { authFetch, clearAccessToken, getAccessToken, login, logout, register } from "./client";
 
 const session: AuthSessionResponse = {
   accessToken: "access-token",
@@ -17,6 +17,25 @@ afterEach(() => {
   clearAccessToken();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
+});
+
+describe("auth session storage", () => {
+  test("register keeps the access token in memory without localStorage persistence", async () => {
+    const setItem = vi.spyOn(Storage.prototype, "setItem");
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(session), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await register("user@example.com", "password123");
+
+    expect(result.accessToken).toBe("access-token");
+    expect(getAccessToken()).toBe("access-token");
+    expect(setItem).not.toHaveBeenCalled();
+  });
 });
 
 describe("authFetch trusted origin", () => {
