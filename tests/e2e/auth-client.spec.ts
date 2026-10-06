@@ -107,9 +107,18 @@ test("auth client login refresh retry and logout works in a real browser", async
 
   await page.goto("/");
 
+  await page.waitForFunction(() => "__vibeAuthClient" in window);
+
   const result = await page.evaluate(async () => {
-    const authClientModule = "/src/lib/auth/client.ts";
-    const client = await import(authClientModule);
+    type AuthClient = {
+      login(email: string, password: string): Promise<unknown>;
+      getAccessToken(): string | null;
+      getMe(): Promise<{ user: { email: string } }>;
+      logout(): Promise<void>;
+    };
+
+    const client = (window as Window & { __vibeAuthClient?: AuthClient }).__vibeAuthClient;
+    if (!client) throw new Error("Auth client E2E hook is unavailable");
 
     await client.login("user@example.com", "password123");
     const afterLogin = client.getAccessToken();
