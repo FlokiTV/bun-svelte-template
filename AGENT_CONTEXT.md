@@ -8,8 +8,8 @@ Aplicar os achados da revisão final, sempre commitando e testando, deixando o f
 
 ## Board e card
 - Board: board_8b411807-cef3-420a-bfab-e89932cb0e44 — bun-svelte-template — Final review follow-up
-- Status: active
-- Card atual: task_475ec8bb-3747-420a-95c6-7aeb8c3f0644 — 05 — Gates finais e handoff — concluindo.
+- Status: done
+- Card final: task_475ec8bb-3747-420a-95c6-7aeb8c3f0644 — 05 — Gates finais e handoff — done.
 
 ## Estado de partida
 - main sincronizada com origin/main.
@@ -34,7 +34,7 @@ Aplicar os achados da revisão final, sempre commitando e testando, deixando o f
 Cada card termina com testes/gates relevantes verdes e commit próprio antes de avançar.
 
 ## Próximo passo exato
-Commitar o fechamento do follow-up, confirmar git clean, fechar card/board e deixar os commits locais prontos para push.
+Push para origin/main somente mediante autorização explícita do usuário; nenhum ajuste local pendente.
 
 ### Card 01 — refresh cookie deletion
 - set/clear centralizados em auth.cookie.ts.
@@ -210,3 +210,9 @@ Commitar o fechamento do follow-up, confirmar git clean, fechar card/board e dei
 - bun run build: PASS.
 - drizzle-kit check: PASS.
 - YAML da CI: PASS; database/e2e/quality usam ubuntu-24.04.
+
+
+### Fechamento do follow-up
+- board board_8b411807-cef3-420a-bfab-e89932cb0e44: done 5/5.
+- commit técnico final: cd61e32.
+- branch main ficou localmente à frente de origin/main; push não executado neste ciclo.
