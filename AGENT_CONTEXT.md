@@ -9,7 +9,7 @@ Executar todos os ajustes do board, sempre commitando as mudanças e testando tu
 ## Board e card
 - Board: board_4bc8a982-5a76-4ded-8544-6c66bcfcc27c — bun-svelte-template — Auth hardening & review follow-up
 - Status: active
-- Card atual: task_71285449-1c21-4705-bedf-2b41b2119fa1 — 06 — Ampliar cobertura de autenticação no frontend e E2E — in_progress.
+- Card atual: task_d67c589e-506d-49bc-9675-6ac6c129ba13 — 07 — Remover índice redundante de users.email com migration nova — in_progress.
 
 ## Terminais gerenciados
 - Nenhum terminal ativo/relevante deste workspace nesta rodada.
@@ -43,6 +43,8 @@ Board criado com a seguinte ordem:
 - apps/web/src/lib/auth/client.test.ts — regressões para origin, refresh, logout e ApiError.
 - apps/web/src/lib/api/request.ts — readJsonResponse compartilhado para preservar ApiError.
 - tests/e2e/auth-client.spec.ts — journey browser real login → 401 → refresh → retry → logout, sem UI de login nem banco real.
+- apps/api/src/db/schema/auth.schema.ts — removido índice explícito redundante de users.email.
+- apps/api/drizzle/0001_sturdy_bloodstrike.sql + meta — migration incremental DROP INDEX; 0000 preservada.
 
 ## Validações
 Card 01 — baseline determinístico:
@@ -89,7 +91,7 @@ Card 03 — refresh single-flight:
 - Nenhum bloqueio atual. Baseline reproduzível restaurado e gates verdes.
 
 ## Próximo passo exato
-Commitar e fechar o card 06; iniciar o card 07 para confirmar e remover o índice redundante de users.email via migration incremental, sem alterar a migration 0000.
+Commitar e fechar o card 07; iniciar o card 08 para revisão final de documentação e execução de frozen install, doctor, verify, E2E, OpenAPI/build e Git clean.
 
 
 ### Card 06 — cobertura de autenticação
@@ -97,5 +99,16 @@ Commitar e fechar o card 06; iniciar o card 07 para confirmar e remover o índic
 - unitários cobrem 401 → refresh → retry, refresh concorrente single-flight, origin externa, logout sob falha e ApiError.
 - testes web: 13/13 PASS.
 - E2E auth em browser real: login → /me 401 → 1 refresh → retry com token novo → logout; validado em mobile e desktop.
+- bun run verify: PASS.
+- bun run test:e2e: 4/4 PASS.
+
+
+### Card 07 — índice redundante users.email
+- migration 0000 confirmada intacta.
+- Drizzle db:generate: sem mudanças adicionais.
+- drizzle-kit check: PASS.
+- migration 0001 contém somente DROP INDEX "users_email_idx".
+- validação em PostgreSQL WASM descartável (PGlite 0.5.8): antes users_email_idx + users_email_unique + PK; após 0001 users_email_unique + PK.
+- Docker/Postgres nativo e Supabase remoto não estavam disponíveis nesta máquina; a validação descartável foi feita fora do repositório e o diretório temporário foi removido.
 - bun run verify: PASS.
 - bun run test:e2e: 4/4 PASS.

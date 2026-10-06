@@ -8,6 +8,13 @@
       "when": 1790806745570,
       "tag": "0000_brainy_solo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791291307003,
+      "tag": "0001_sturdy_bloodstrike",
+      "breakpoints": true
     }
   ]
 }
