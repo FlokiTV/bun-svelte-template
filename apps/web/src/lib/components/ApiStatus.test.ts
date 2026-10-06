@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/svelte";
-import { expect, test } from "vitest";
+import { expect, test } from "@rstest/core";
 import ApiStatus from "./ApiStatus.svelte";
 
 test("shows the online state", () => {

@@ -1,5 +1,5 @@
 import type { AuthSessionResponse } from "@vibe/contracts";
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, rs, test } from "@rstest/core";
 import { ApiError } from "../api/errors";
 import { authFetch, clearAccessToken, getAccessToken, login, logout, register } from "./client";
 
@@ -15,20 +15,20 @@ const session: AuthSessionResponse = {
 
 afterEach(() => {
   clearAccessToken();
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
+  rs.unstubAllGlobals();
+  rs.restoreAllMocks();
 });
 
 describe("auth session storage", () => {
   test("register keeps the access token in memory without localStorage persistence", async () => {
-    const setItem = vi.spyOn(Storage.prototype, "setItem");
-    const fetchMock = vi.fn().mockResolvedValue(
+    const setItem = rs.spyOn(Storage.prototype, "setItem");
+    const fetchMock = rs.fn().mockResolvedValue(
       new Response(JSON.stringify(session), {
         status: 200,
         headers: { "content-type": "application/json" },
       }),
     );
-    vi.stubGlobal("fetch", fetchMock);
+    rs.stubGlobal("fetch", fetchMock);
 
     const result = await register("user@example.com", "password123");
 
@@ -40,13 +40,13 @@ describe("auth session storage", () => {
 
 describe("authFetch trusted origin", () => {
   test("never sends the access token to an external origin", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
+    const fetchMock = rs.fn().mockResolvedValue(
       new Response(JSON.stringify(session), {
         status: 200,
         headers: { "content-type": "application/json" },
       }),
     );
-    vi.stubGlobal("fetch", fetchMock);
+    rs.stubGlobal("fetch", fetchMock);
 
     await login("user@example.com", "password123");
 
@@ -57,7 +57,7 @@ describe("authFetch trusted origin", () => {
   });
 
   test("accepts relative requests resolved against the API origin", async () => {
-    const fetchMock = vi
+    const fetchMock = rs
       .fn()
       .mockResolvedValueOnce(
         new Response(JSON.stringify(session), {
@@ -66,7 +66,7 @@ describe("authFetch trusted origin", () => {
         }),
       )
       .mockResolvedValueOnce(new Response(null, { status: 204 }));
-    vi.stubGlobal("fetch", fetchMock);
+    rs.stubGlobal("fetch", fetchMock);
 
     await login("user@example.com", "password123");
     await authFetch("/api/v1/private");
@@ -76,12 +76,12 @@ describe("authFetch trusted origin", () => {
     expect(new Headers(init?.headers).get("authorization")).toBe("Bearer access-token");
   });
 
-  test("honors a custom VITE_API_URL origin", async () => {
-    vi.stubEnv("VITE_API_URL", "https://api.example.test/api/v1");
-    vi.resetModules();
+  test("honors a custom PUBLIC_API_URL origin", async () => {
+    rs.stubEnv("PUBLIC_API_URL", "https://api.example.test/api/v1");
+    rs.resetModules();
 
     const customClient = await import("./client");
-    const fetchMock = vi
+    const fetchMock = rs
       .fn()
       .mockResolvedValueOnce(
         new Response(JSON.stringify(session), {
@@ -90,7 +90,7 @@ describe("authFetch trusted origin", () => {
         }),
       )
       .mockResolvedValueOnce(new Response(null, { status: 204 }));
-    vi.stubGlobal("fetch", fetchMock);
+    rs.stubGlobal("fetch", fetchMock);
 
     await customClient.login("user@example.com", "password123");
     await customClient.authFetch("https://api.example.test/api/v1/private");
@@ -104,7 +104,7 @@ describe("authFetch trusted origin", () => {
   });
 
   test("sends the access token to the configured API origin", async () => {
-    const fetchMock = vi
+    const fetchMock = rs
       .fn()
       .mockResolvedValueOnce(
         new Response(JSON.stringify(session), {
@@ -113,7 +113,7 @@ describe("authFetch trusted origin", () => {
         }),
       )
       .mockResolvedValueOnce(new Response(null, { status: 204 }));
-    vi.stubGlobal("fetch", fetchMock);
+    rs.stubGlobal("fetch", fetchMock);
 
     await login("user@example.com", "password123");
     await authFetch("http://localhost:3000/api/v1/private");
@@ -135,7 +135,7 @@ describe("authFetch refresh single-flight", () => {
     const protectedAttempts = new Map<string, number>();
     const retryAuthorizations: string[] = [];
 
-    const fetchMock = vi
+    const fetchMock = rs
       .fn()
       .mockImplementation(async (input: string | URL, init?: RequestInit) => {
         const url = String(input);
@@ -169,7 +169,7 @@ describe("authFetch refresh single-flight", () => {
         retryAuthorizations.push(new Headers(init?.headers).get("authorization") ?? "");
         return new Response(null, { status: 204 });
       });
-    vi.stubGlobal("fetch", fetchMock);
+    rs.stubGlobal("fetch", fetchMock);
 
     await login("user@example.com", "password123");
 
@@ -178,7 +178,7 @@ describe("authFetch refresh single-flight", () => {
       authFetch("http://localhost:3000/api/v1/private/b"),
     ]);
 
-    await vi.waitFor(() => expect(refreshCalls).toBe(1));
+    await rs.waitFor(() => expect(refreshCalls).toBe(1));
     resolveRefresh();
 
     const responses = await pending;
@@ -190,7 +190,7 @@ describe("authFetch refresh single-flight", () => {
   test("clears local auth after refresh failure without retry loops", async () => {
     let protectedCalls = 0;
     let refreshCalls = 0;
-    const fetchMock = vi.fn().mockImplementation(async (input: string | URL) => {
+    const fetchMock = rs.fn().mockImplementation(async (input: string | URL) => {
       const url = String(input);
 
       if (url.endsWith("/auth/login")) {
@@ -220,7 +220,7 @@ describe("authFetch refresh single-flight", () => {
       protectedCalls += 1;
       return new Response(null, { status: 401 });
     });
-    vi.stubGlobal("fetch", fetchMock);
+    rs.stubGlobal("fetch", fetchMock);
 
     await login("user@example.com", "password123");
     const response = await authFetch("http://localhost:3000/api/v1/private");
@@ -234,7 +234,7 @@ describe("authFetch refresh single-flight", () => {
 
 describe("logout auth state", () => {
   test("clears the access token even when the network request fails", async () => {
-    const fetchMock = vi
+    const fetchMock = rs
       .fn()
       .mockResolvedValueOnce(
         new Response(JSON.stringify(session), {
@@ -243,7 +243,7 @@ describe("logout auth state", () => {
         }),
       )
       .mockRejectedValueOnce(new TypeError("network down"));
-    vi.stubGlobal("fetch", fetchMock);
+    rs.stubGlobal("fetch", fetchMock);
 
     await login("user@example.com", "password123");
     expect(getAccessToken()).toBe("access-token");
@@ -253,7 +253,7 @@ describe("logout auth state", () => {
   });
 
   test("surfaces a remote logout failure and still clears local auth", async () => {
-    const fetchMock = vi
+    const fetchMock = rs
       .fn()
       .mockResolvedValueOnce(
         new Response(JSON.stringify(session), {
@@ -276,7 +276,7 @@ describe("logout auth state", () => {
           },
         ),
       );
-    vi.stubGlobal("fetch", fetchMock);
+    rs.stubGlobal("fetch", fetchMock);
 
     await login("user@example.com", "password123");
 
@@ -303,7 +303,7 @@ describe("logout auth state", () => {
     let protectedCalls = 0;
     let refreshCalls = 0;
 
-    const fetchMock = vi.fn().mockImplementation(async (input: string | URL) => {
+    const fetchMock = rs.fn().mockImplementation(async (input: string | URL) => {
       const url = String(input);
 
       if (url.endsWith("/auth/login")) {
@@ -338,11 +338,11 @@ describe("logout auth state", () => {
       protectedCalls += 1;
       return new Response(null, { status: 401 });
     });
-    vi.stubGlobal("fetch", fetchMock);
+    rs.stubGlobal("fetch", fetchMock);
 
     await login("user@example.com", "password123");
     const pendingRequest = authFetch("http://localhost:3000/api/v1/private");
-    await vi.waitFor(() => expect(refreshCalls).toBe(1));
+    await rs.waitFor(() => expect(refreshCalls).toBe(1));
 
     await logout();
     resolveRefresh();
@@ -356,7 +356,7 @@ describe("logout auth state", () => {
 
 describe("auth ApiError contract", () => {
   test("preserves structured API errors from auth endpoints", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
+    const fetchMock = rs.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
           error: {
@@ -371,7 +371,7 @@ describe("auth ApiError contract", () => {
         },
       ),
     );
-    vi.stubGlobal("fetch", fetchMock);
+    rs.stubGlobal("fetch", fetchMock);
 
     const error = await login("user@example.com", "wrong-password").catch(
       (caught: unknown) => caught,
@@ -387,7 +387,7 @@ describe("auth ApiError contract", () => {
   });
 
   test("falls back to HTTP_ERROR when the error body is not valid JSON", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
+    const fetchMock = rs.fn().mockResolvedValue(
       new Response("upstream failure", {
         status: 502,
         headers: {
@@ -396,7 +396,7 @@ describe("auth ApiError contract", () => {
         },
       }),
     );
-    vi.stubGlobal("fetch", fetchMock);
+    rs.stubGlobal("fetch", fetchMock);
 
     const error = await login("user@example.com", "password123").catch((caught: unknown) => caught);
 

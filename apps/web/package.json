@@ -11,7 +11,7 @@
     "build": "rsbuild build && bun scripts/create-spa-fallback.ts",
     "preview": "rsbuild preview --host 0.0.0.0",
     "check": "bun ./node_modules/svelte-check/bin/svelte-check --tsconfig ./tsconfig.json",
-    "test": "vitest run"
+    "test": "rstest run"
   },
   "dependencies": {
     "@vibe/contracts": "workspace:*"
@@ -26,7 +26,8 @@
     "svelte-check": "4.7.6",
     "tailwindcss": "4.3.3",
     "typescript": "6.0.3",
-    "vitest": "5.0.3",
-    "@vibe/test-utils": "workspace:*"
+    "@vibe/test-utils": "workspace:*",
+    "@rstest/core": "0.12.3",
+    "@rstest/adapter-rsbuild": "0.12.3"
   }
 }
