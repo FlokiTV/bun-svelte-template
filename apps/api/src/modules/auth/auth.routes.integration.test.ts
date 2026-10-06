@@ -120,6 +120,7 @@ mock.module("./auth.repository", () => ({
   },
 }));
 
+process.env.RATE_LIMIT_AUTH_MAX = "100";
 const { app } = await import("../../app");
 
 function request(path: string, init: RequestInit = {}): Promise<Response> {
@@ -174,6 +175,26 @@ describe("auth HTTP flow", () => {
     const normalizedEmail = "auth.flow@example.com";
     const password = "correct-horse-battery-staple";
 
+    const blockedRegister = await request("/api/v1/auth/register", {
+      method: "POST",
+      headers: { origin: "https://evil.example" },
+      body: JSON.stringify({ email, password }),
+    });
+    expect(blockedRegister.status).toBe(403);
+    expect(usersById.size).toBe(0);
+
+    const blockedFormLogin = await app.handle(
+      new Request("http://localhost/api/v1/auth/login", {
+        method: "POST",
+        headers: {
+          "content-type": "application/x-www-form-urlencoded",
+          origin: "https://evil.example",
+        },
+        body: `email=${encodeURIComponent(normalizedEmail)}&password=${encodeURIComponent(password)}`,
+      }),
+    );
+    expect(blockedFormLogin.status).toBe(403);
+
     const invalidRegister = await request("/api/v1/auth/register", {
       method: "POST",
       body: JSON.stringify({ email: "not-an-email", password: "short" }),
@@ -225,6 +246,7 @@ describe("auth HTTP flow", () => {
 
     const login = await request("/api/v1/auth/login", {
       method: "POST",
+      headers: { origin: "http://localhost:5173" },
       body: JSON.stringify({ email: "AUTH.FLOW@example.com", password }),
     });
     expect(login.status).toBe(200);

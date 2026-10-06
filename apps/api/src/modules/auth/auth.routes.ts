@@ -27,6 +27,17 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
   .post(
     "/register",
     async ({ body, cookie, accessJwt, refreshJwt, request, status }) => {
+      if (!requestOriginIsAllowed(request)) {
+        return status(
+          403,
+          errorResponse(
+            ERROR_CODES.FORBIDDEN,
+            "Request origin is not allowed",
+            requestIdFor(request),
+          ),
+        );
+      }
+
       const user = await registerUser(body.email, body.password);
       if (!user) {
         return status(
@@ -70,6 +81,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
       body: AuthCredentialsBody,
       response: {
         200: AuthSessionResponseSchema,
+        403: ErrorResponseSchema,
         409: ErrorResponseSchema,
       },
       detail: {
@@ -81,6 +93,17 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
   .post(
     "/login",
     async ({ body, cookie, accessJwt, refreshJwt, request, status }) => {
+      if (!requestOriginIsAllowed(request)) {
+        return status(
+          403,
+          errorResponse(
+            ERROR_CODES.FORBIDDEN,
+            "Request origin is not allowed",
+            requestIdFor(request),
+          ),
+        );
+      }
+
       const user = await authenticateUser(body.email, body.password);
       if (!user) {
         return status(
@@ -125,6 +148,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
       response: {
         200: AuthSessionResponseSchema,
         401: ErrorResponseSchema,
+        403: ErrorResponseSchema,
       },
       detail: {
         tags: ["Auth"],
