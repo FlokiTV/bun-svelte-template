@@ -95,5 +95,4 @@ export const app = new Elysia({
       path: new URL(request.url).pathname,
       status: set.status ?? 200,
     });
-  })
-;
+  });

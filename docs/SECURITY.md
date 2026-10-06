@@ -10,10 +10,11 @@ The template ships with conservative defaults, not a complete security program.
 - single-flight refresh handling for rotated refresh sessions;
 - logout generation guard so an in-flight refresh cannot restore local auth state after logout;
 - validated CORS allow-list restricted to explicit `http`/`https` origins;
-- browser `Origin` enforcement on refresh/logout and WebSocket handshakes;
+- browser `Origin` enforcement on register/login/refresh/logout and WebSocket handshakes;
 - common security response headers;
 - Bun/Elysia request body size limit;
 - per-route rate-limit macro (`rateLimit: "default" | "auth"`);
+- global API error sanitization for validation/not-found/internal failures;
 - request IDs, monotonic `durationMs`, and structured logging without secrets;
 - outbound request timeout helper;
 - local secret scan executed by the completion gate and CI;

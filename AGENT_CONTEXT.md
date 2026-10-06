@@ -4,12 +4,12 @@
 - Pasta de trabalho: D:\DEV\bun-svelte-template
 
 ## Pedido atual do usuário
-Executar todos os ajustes da segunda revisão técnica, sempre commitando e testando, e publicar o resultado final em origin/main.
+Aplicar os achados da revisão final, sempre commitando e testando, deixando o follow-up pronto para push.
 
 ## Board e card
-- Board: board_0d8d387a-ee3a-41f9-9a3a-d7e25085d0a6 — bun-svelte-template — Security & production hardening v2
-- Status: done
-- Card final: task_49745565-35e1-4cd6-86a6-8a921dcab86b — 10 — Documentação, gate final e push — done.
+- Board: board_8b411807-cef3-420a-bfab-e89932cb0e44 — bun-svelte-template — Final review follow-up
+- Status: active
+- Card atual: task_475ec8bb-3747-420a-95c6-7aeb8c3f0644 — 05 — Gates finais e handoff — concluindo.
 
 ## Estado de partida
 - main sincronizada com origin/main.
@@ -34,7 +34,7 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 Cada card termina com testes/gates relevantes verdes e commit próprio antes de avançar.
 
 ## Próximo passo exato
-Nenhum ajuste pendente neste board. Manter o template via novos boards/PRs para mudanças futuras.
+Commitar o fechamento do follow-up, confirmar git clean, fechar card/board e deixar os commits locais prontos para push.
 
 ### Card 01 — refresh cookie deletion
 - set/clear centralizados em auth.cookie.ts.
@@ -145,7 +145,7 @@ Nenhum ajuste pendente neste board. Manter o template via novos boards/PRs para 
 - architecture:check PASS; doctor sem bloqueios; audit:ci PASS.
 - advisory cookie@0.6.0 foi eliminado pelo SvelteKit 3; resta apenas esbuild moderado na cadeia de tooling Drizzle.
 - TypeScript 7 adiado: SvelteKit 3.0.1 declara peer TypeScript ^6.0.0 e svelte-check 4.7.6 declara ^5 || ^6; manter TS 6.0.3 evita combinação oficialmente não suportada.
-- script web check passa a invocar svelte-check via Node com heap 4096 MB para evitar OOM intermitente no ambiente Windows.
+- script web check usa svelte-check diretamente sob Bun 1.4.2; não há requisito explícito de Node.
 - verify/E2E locais completos ficaram impedidos nesta máquina por pagefile/heap do Windows, apesar de checks isolados passarem; CI 37489072909 passou quality, database e e2e.
 
 
@@ -164,3 +164,49 @@ Nenhum ajuste pendente neste board. Manter o template via novos boards/PRs para 
 - build config/contracts/API/web: PASS.
 - CI 37489975385: PASS — quality (doctor + audit + verify), database (PostgreSQL 17 + migrations + db:check + test:db) e e2e.
 - main sincronizada com origin/main após o commit 92f6030; working tree limpo antes desta sincronização final de contexto.
+
+
+## Follow-up da revisão final
+
+### 01 — Error handling global
+- onError agora é registrado antes dos plugins/rotas montados via .use().
+- validações em rotas montadas retornam ErrorResponse estável 422.
+- exceções internas retornam INTERNAL_ERROR sanitizado sem vazar mensagens internas.
+- teste auth integrado: PASS.
+- API typecheck: PASS.
+- commit: 142a573.
+
+### 02 — Origin em entrypoints auth
+- register/login/refresh/logout validam browser Origin contra CORS_ORIGINS.
+- clientes server-to-server sem Origin continuam suportados.
+- POST simple cross-site application/x-www-form-urlencoded em login: 403.
+- browser Origin permitido: PASS.
+- teste auth integrado: PASS.
+- API typecheck: PASS.
+- commit: 7aa4b4b.
+
+### 03 — CI supply-chain
+- runners fixados em ubuntu-24.04.
+- actions/checkout v6 pinado em d23441a48e516b6c34aea4fa41551a30e30af803.
+- oven-sh/setup-bun v2 pinado em 0c5077e51419868618aeaa5fe8019c62421857d6.
+- YAML validado.
+- commit: aa53f72.
+
+### 04 — Bun-only frontend check
+- svelte-check validado diretamente sob Bun 1.4.2.
+- removida chamada explícita a node do script @vibe/web check.
+- svelte-check: 0 erros/0 warnings.
+- commit: 7f3a944.
+
+
+### 05 — Gates finais
+- auth integration focado: PASS, 2 testes / 47 expects.
+- bun install --frozen-lockfile com Bun 1.4.2: PASS.
+- doctor: PASS; apenas avisos locais não bloqueantes de .env/Docker/DB opcional.
+- audit:ci: PASS; 1 advisory abaixo do threshold high.
+- bun run verify: PASS; API/web 32 testes, 0 falhas.
+- bun run test:e2e: PASS 4/4.
+- openapi:check: PASS, 11 paths.
+- bun run build: PASS.
+- drizzle-kit check: PASS.
+- YAML da CI: PASS; database/e2e/quality usam ubuntu-24.04.

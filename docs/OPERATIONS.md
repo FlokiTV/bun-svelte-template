@@ -54,7 +54,7 @@ bun x supabase stop
 For Supabase Cloud, copy the project PostgreSQL connection string into `DATABASE_URL` and run the same `db:migrate` and `db:check` commands. Do not commit project credentials.
 
 ## CI database gate
-The GitHub Actions `database` job starts PostgreSQL 17, performs a frozen install, applies all migrations from an empty database, checks connectivity, and runs the real auth repository flow (`test:db`). This catches migration/repository regressions that mocked unit tests cannot detect.
+GitHub Actions jobs run on `ubuntu-24.04`; `actions/checkout` and `oven-sh/setup-bun` are pinned by commit SHA while retaining comments for their tracked major tags. The `database` job starts PostgreSQL 17, performs a frozen install, applies all migrations from an empty database, checks connectivity, and runs the real auth repository flow (`test:db`). This catches migration/repository regressions that mocked unit tests cannot detect.
 
 ## Outbound HTTP
 Use `fetchWithTimeout` from `apps/api/src/core/http-client.ts` for external services instead of raw long-running `fetch` calls.

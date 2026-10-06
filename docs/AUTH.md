@@ -95,7 +95,7 @@ It deliberately does not provide login screens or product-specific session UI.
 - Do not store the access token in localStorage in the provided pattern.
 - Keep authenticated browser calls scoped to the configured API origin; do not bypass `authFetch` with ad-hoc Bearer handling.
 - Keep refresh cookies HttpOnly and scoped to `/api/v1/auth`.
-- Refresh/logout requests with a browser `Origin` header are accepted only when that origin is in the configured CORS allow-list; server-to-server requests without `Origin` remain supported.
+- Register/login/refresh/logout requests with a browser `Origin` header are accepted only when that origin is in the configured CORS allow-list; server-to-server requests without `Origin` remain supported.
 - Restrict CORS to known `http`/`https` origins. Wildcards and origin values containing a path/query/fragment are rejected at startup.
 - Use HTTPS in production.
 - Add rate limits to register/login/refresh before exposing the application publicly.
