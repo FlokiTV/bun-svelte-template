@@ -34,7 +34,7 @@ Aplicar os achados da revisão final, sempre commitando e testando, deixando o f
 Cada card termina com testes/gates relevantes verdes e commit próprio antes de avançar.
 
 ## Próximo passo exato
-Push para origin/main somente mediante autorização explícita do usuário; nenhum ajuste local pendente.
+Nenhum ajuste pendente. Follow-up publicado em origin/main e validado local/remotamente.
 
 ### Card 01 — refresh cookie deletion
 - set/clear centralizados em auth.cookie.ts.
@@ -215,4 +215,6 @@ Push para origin/main somente mediante autorização explícita do usuário; nen
 ### Fechamento do follow-up
 - board board_8b411807-cef3-420a-bfab-e89932cb0e44: done 5/5.
 - commit técnico final: cd61e32.
-- branch main ficou localmente à frente de origin/main; push não executado neste ciclo.
+- push autorizado executado para origin/main.
+- CI 37522476396: PASS — quality, database (PostgreSQL 17 + migrations + test:db) e e2e.
+- validação local pós-push: frozen install PASS; doctor PASS; audit:ci PASS; verify PASS (32/32); E2E 4/4; drizzle-kit check PASS.
