@@ -1,6 +1,6 @@
 import type { AuthSessionResponse } from "@vibe/contracts";
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { authFetch, clearAccessToken, getAccessToken, login } from "./client";
+import { authFetch, clearAccessToken, getAccessToken, login, logout } from "./client";
 
 const session: AuthSessionResponse = {
   accessToken: "access-token",
@@ -207,6 +207,107 @@ describe("authFetch refresh single-flight", () => {
 
     expect(response.status).toBe(401);
     expect(refreshCalls).toBe(1);
+    expect(protectedCalls).toBe(1);
+    expect(getAccessToken()).toBeNull();
+  });
+});
+
+describe("logout auth state", () => {
+  test("clears the access token even when the network request fails", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(session), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      )
+      .mockRejectedValueOnce(new TypeError("network down"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await login("user@example.com", "password123");
+    expect(getAccessToken()).toBe("access-token");
+
+    await expect(logout()).rejects.toThrow("network down");
+    expect(getAccessToken()).toBeNull();
+  });
+
+  test("surfaces a remote logout failure and still clears local auth", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(session), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(new Response(null, { status: 503 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await login("user@example.com", "password123");
+
+    await expect(logout()).rejects.toThrow("Logout failed with 503");
+    expect(getAccessToken()).toBeNull();
+
+    const [, init] = fetchMock.mock.calls[1] ?? [];
+    expect(init?.method).toBe("POST");
+    expect(init?.credentials).toBe("include");
+  });
+
+  test("prevents an in-flight refresh from restoring auth after logout", async () => {
+    let resolveRefresh!: () => void;
+    const refreshGate = new Promise<void>((resolve) => {
+      resolveRefresh = resolve;
+    });
+    let protectedCalls = 0;
+    let refreshCalls = 0;
+
+    const fetchMock = vi.fn().mockImplementation(async (input: string | URL) => {
+      const url = String(input);
+
+      if (url.endsWith("/auth/login")) {
+        return new Response(JSON.stringify(session), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+
+      if (url.endsWith("/auth/refresh")) {
+        refreshCalls += 1;
+        await refreshGate;
+        return new Response(
+          JSON.stringify({
+            ...session,
+            accessToken: "late-refresh-token",
+          }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          },
+        );
+      }
+
+      if (url.endsWith("/auth/logout")) {
+        return new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+
+      protectedCalls += 1;
+      return new Response(null, { status: 401 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await login("user@example.com", "password123");
+    const pendingRequest = authFetch("http://localhost:3000/api/v1/private");
+    await vi.waitFor(() => expect(refreshCalls).toBe(1));
+
+    await logout();
+    resolveRefresh();
+
+    const response = await pendingRequest;
+    expect(response.status).toBe(401);
     expect(protectedCalls).toBe(1);
     expect(getAccessToken()).toBeNull();
   });

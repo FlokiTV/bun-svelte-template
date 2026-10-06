@@ -9,7 +9,7 @@ Executar todos os ajustes do board, sempre commitando as mudanças e testando tu
 ## Board e card
 - Board: board_4bc8a982-5a76-4ded-8544-6c66bcfcc27c — bun-svelte-template — Auth hardening & review follow-up
 - Status: active
-- Card atual: task_e0d9de51-4156-4e37-ab3a-d2bed723a226 — 03 — Implementar refresh JWT single-flight no cliente — in_progress.
+- Card atual: task_bf993b9a-e8de-4e87-b1c0-020252250c80 — 04 — Endurecer logout e ciclo de estado local — in_progress.
 
 ## Terminais gerenciados
 - Nenhum terminal ativo/relevante deste workspace nesta rodada.
@@ -56,6 +56,14 @@ Card 02 — trusted origin:
 - testes web: 5/5 PASS.
 - bun run verify: PASS.
 - bun run test:e2e: 2/2 PASS.
+
+Card 04 — logout hardening:
+- logout limpa token local antes do request remoto e também em finally.
+- falha de rede e HTTP remoto são propagadas sem restaurar auth local.
+- logout invalida gerações de auth; refresh em voo não pode repopular o token depois da saída.
+- testes web: 10/10 PASS.
+- bun run verify: PASS.
+- bun run test:e2e: 2/2 PASS.
 - authFetch rejeita origin externa antes de anexar Authorization ou credentials.
 
 Card 03 — refresh single-flight:
@@ -70,4 +78,4 @@ Card 03 — refresh single-flight:
 - Nenhum bloqueio atual. Baseline reproduzível restaurado e gates verdes.
 
 ## Próximo passo exato
-Commitar e fechar o card 03; iniciar o card 04 para endurecer logout, inclusive falha de rede/HTTP e interação com refresh em voo.
+Commitar e fechar o card 04; iniciar o card 05 para unificar erros de autenticação com ApiError sem perder o controle explícito do 401.

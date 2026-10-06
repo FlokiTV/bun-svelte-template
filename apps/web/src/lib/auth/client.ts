@@ -16,6 +16,8 @@ function trustedApiUrl(input: string | URL): URL {
 
 let accessToken: string | null = null;
 let refreshPromise: Promise<AuthSessionResponse> | null = null;
+let authGeneration = 0;
+let signedOut = false;
 
 export function getAccessToken(): string | null {
   return accessToken;
@@ -42,6 +44,8 @@ export async function register(email: string, password: string): Promise<AuthSes
     body: JSON.stringify({ email, password }),
   });
   const session = await readJson<AuthSessionResponse>(response);
+  authGeneration += 1;
+  signedOut = false;
   accessToken = session.accessToken;
   return session;
 }
@@ -54,19 +58,30 @@ export async function login(email: string, password: string): Promise<AuthSessio
     body: JSON.stringify({ email, password }),
   });
   const session = await readJson<AuthSessionResponse>(response);
+  authGeneration += 1;
+  signedOut = false;
   accessToken = session.accessToken;
   return session;
 }
 
 export function refreshAccessToken(): Promise<AuthSessionResponse> {
+  if (signedOut) {
+    return Promise.reject(new Error("Cannot refresh after logout"));
+  }
   if (refreshPromise) return refreshPromise;
 
+  const refreshGeneration = authGeneration;
   refreshPromise = (async () => {
     const response = await fetch(`${apiBaseUrl}/auth/refresh`, {
       method: "POST",
       credentials: "include",
     });
     const session = await readJson<AuthSessionResponse>(response);
+
+    if (signedOut || authGeneration !== refreshGeneration) {
+      throw new Error("Authentication state changed during refresh");
+    }
+
     accessToken = session.accessToken;
     return session;
   })().finally(() => {
@@ -77,11 +92,21 @@ export function refreshAccessToken(): Promise<AuthSessionResponse> {
 }
 
 export async function logout(): Promise<void> {
-  await fetch(`${apiBaseUrl}/auth/logout`, {
-    method: "POST",
-    credentials: "include",
-  });
+  authGeneration += 1;
+  signedOut = true;
   clearAccessToken();
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+    if (!response.ok) {
+      throw new Error(`Logout failed with ${response.status}`);
+    }
+  } finally {
+    clearAccessToken();
+  }
 }
 
 export async function authFetch(input: string | URL, init: RequestInit = {}): Promise<Response> {
