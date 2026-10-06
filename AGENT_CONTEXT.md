@@ -9,7 +9,7 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 ## Board e card
 - Board: board_0d8d387a-ee3a-41f9-9a3a-d7e25085d0a6 — bun-svelte-template — Security & production hardening v2
 - Status: active
-- Card atual: task_4b38b849-c404-4826-92d0-b99299a90f87 — 04 — Adicionar issuer e audience aos JWTs — concluindo.
+- Card atual: task_1aade41b-2ccc-4af1-9f77-1c8e2ceb4d3d — 06 — Adicionar durationMs à observabilidade HTTP — concluindo.
 
 ## Estado de partida
 - main sincronizada com origin/main.
@@ -34,8 +34,7 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 Cada card termina com testes/gates relevantes verdes e commit próprio antes de avançar.
 
 ## Próximo passo exato
-Commitar e fechar o card 04; iniciar hardening do WebSocket público no card 05.
-
+Commitar e fechar o card 06; iniciar o card 07 com PostgreSQL 17 em CI, migrations do zero, db:check e fluxo auth real.
 
 ### Card 01 — refresh cookie deletion
 - set/clear centralizados em auth.cookie.ts.
@@ -84,5 +83,24 @@ Commitar e fechar o card 04; iniciar hardening do WebSocket público no card 05.
 - handshake real com Origin permitido: PASS; Origin malicioso: rejeitado.
 - testes unitários de limiter: PASS.
 - integração real WebSocket: PASS.
+- bun run verify: PASS.
+- bun run test:e2e: 4/4 PASS.
+
+
+### Card 06 — durationMs
+- timing monotônico armazenado por Request via WeakMap.
+- http.request.finished inclui requestId + durationMs.
+- logs de validação/falha também incluem durationMs.
+- testes focados: PASS; log real observado com durationMs.
+- svelte-check local exigiu NODE_OPTIONS com heap explícito devido pressão de memória externa; 0 erros/0 warnings.
+- bun run verify com heap explícito: PASS.
+- bun run test:e2e: 4/4 PASS.
+
+
+### Card 06 — durationMs HTTP
+- timing monotônico armazenado por Request em WeakMap.
+- http.request.finished inclui requestId + durationMs.
+- logs de validation/request_failed reutilizam o mesmo contexto temporal.
+- testes de request timing/request ID: PASS.
 - bun run verify: PASS.
 - bun run test:e2e: 4/4 PASS.
