@@ -32,6 +32,31 @@ export const app = new Elysia({
       path: new URL(request.url).pathname,
     });
   })
+  .onError(({ code, error, request, status }) => {
+    const requestId = requestIdFor(request);
+
+    if (code === "VALIDATION") {
+      logger.warn("http.validation_failed", {
+        ...requestLogContext(request),
+      });
+      return status(422, errorResponse(ERROR_CODES.VALIDATION_ERROR, "Invalid request", requestId));
+    }
+
+    if (code === "NOT_FOUND") {
+      return status(404, errorResponse(ERROR_CODES.NOT_FOUND, "Not found", requestId));
+    }
+
+    logger.error("http.request_failed", {
+      ...requestLogContext(request),
+      errorName: error instanceof Error ? error.name : "UnknownError",
+      errorMessage: error instanceof Error ? error.message : "Unhandled non-Error failure",
+    });
+
+    return status(
+      500,
+      errorResponse(ERROR_CODES.INTERNAL_ERROR, "Internal server error", requestId),
+    );
+  })
   .use(
     cors({
       origin: config.corsOrigins,
@@ -71,28 +96,4 @@ export const app = new Elysia({
       status: set.status ?? 200,
     });
   })
-  .onError(({ code, error, request, status }) => {
-    const requestId = requestIdFor(request);
-
-    if (code === "VALIDATION") {
-      logger.warn("http.validation_failed", {
-        ...requestLogContext(request),
-      });
-      return status(422, errorResponse(ERROR_CODES.VALIDATION_ERROR, "Invalid request", requestId));
-    }
-
-    if (code === "NOT_FOUND") {
-      return status(404, errorResponse(ERROR_CODES.NOT_FOUND, "Not found", requestId));
-    }
-
-    logger.error("http.request_failed", {
-      ...requestLogContext(request),
-      errorName: error instanceof Error ? error.name : "UnknownError",
-      errorMessage: error instanceof Error ? error.message : "Unhandled non-Error failure",
-    });
-
-    return status(
-      500,
-      errorResponse(ERROR_CODES.INTERNAL_ERROR, "Internal server error", requestId),
-    );
-  });
+;

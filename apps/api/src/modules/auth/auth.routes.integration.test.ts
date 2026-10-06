@@ -20,6 +20,7 @@ type SessionRecord = {
 const usersById = new Map<string, UserRecord>();
 const userIdByEmail = new Map<string, string>();
 const sessions = new Map<string, SessionRecord>();
+let failFindUserByEmail = false;
 
 mock.module("./auth.repository", () => ({
   createUser: async (email: string, passwordHash: string): Promise<UserRecord | null> => {
@@ -40,6 +41,7 @@ mock.module("./auth.repository", () => ({
   },
 
   findUserByEmail: async (email: string): Promise<UserRecord | null> => {
+    if (failFindUserByEmail) throw new Error("sensitive database failure");
     const id = userIdByEmail.get(email);
     return id ? (usersById.get(id) ?? null) : null;
   },
@@ -140,9 +142,33 @@ beforeEach(() => {
   usersById.clear();
   userIdByEmail.clear();
   sessions.clear();
+  failFindUserByEmail = false;
 });
 
 describe("auth HTTP flow", () => {
+  test("sanitizes unexpected errors from mounted auth routes", async () => {
+    failFindUserByEmail = true;
+
+    const response = await request("/api/v1/auth/login", {
+      method: "POST",
+      body: JSON.stringify({
+        email: "internal-error@example.com",
+        password: "correct-horse-battery-staple",
+      }),
+    });
+
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(body).toEqual({
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "Internal server error",
+        requestId: expect.any(String),
+      },
+    });
+    expect(JSON.stringify(body)).not.toContain("sensitive database failure");
+  });
+
   test("register -> login -> me -> refresh -> logout with failure paths", async () => {
     const email = "Auth.Flow@Example.com";
     const normalizedEmail = "auth.flow@example.com";
@@ -153,6 +179,13 @@ describe("auth HTTP flow", () => {
       body: JSON.stringify({ email: "not-an-email", password: "short" }),
     });
     expect(invalidRegister.status).toBe(422);
+    expect(await invalidRegister.json()).toEqual({
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Invalid request",
+        requestId: expect.any(String),
+      },
+    });
 
     const register = await request("/api/v1/auth/register", {
       method: "POST",
