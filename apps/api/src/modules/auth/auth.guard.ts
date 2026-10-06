@@ -41,8 +41,11 @@ export const authGuard = new Elysia({ name: "auth-guard" })
           );
         }
 
-        const payload = await accessJwt.verify(token);
-        if (!isAccessPayload(payload)) {
+        const payload = await accessJwt.verify(token, {
+          issuer: config.jwtIssuer,
+          audience: config.jwtAccessAudience,
+        });
+        if (!isAccessPayload(payload, config.jwtIssuer, config.jwtAccessAudience)) {
           return status(
             401,
             errorResponse(

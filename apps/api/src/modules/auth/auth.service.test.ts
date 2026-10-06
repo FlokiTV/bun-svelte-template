@@ -22,12 +22,22 @@ describe("auth service", () => {
   });
 
   test("creates typed access and refresh payloads", () => {
-    const access = makeAccessPayload("user-1", "session-1", 900);
-    const refresh = makeRefreshPayload("user-1", "session-1", 3600);
+    const access = makeAccessPayload("user-1", "session-1", 900, "issuer", "access-audience");
+    const refresh = makeRefreshPayload("user-1", "session-1", 3600, "issuer", "refresh-audience");
 
-    expect(isAccessPayload(access)).toBe(true);
-    expect(isRefreshPayload(refresh)).toBe(true);
-    expect(isRefreshPayload(access)).toBe(false);
+    expect(isAccessPayload(access, "issuer", "access-audience")).toBe(true);
+    expect(isRefreshPayload(refresh, "issuer", "refresh-audience")).toBe(true);
+    expect(isRefreshPayload(access, "issuer", "refresh-audience")).toBe(false);
+    expect(isAccessPayload({ ...access, iss: "wrong" }, "issuer", "access-audience")).toBe(false);
+    expect(isAccessPayload({ ...access, aud: "wrong" }, "issuer", "access-audience")).toBe(false);
+    expect(isRefreshPayload({ ...refresh, iss: "wrong" }, "issuer", "refresh-audience")).toBe(
+      false,
+    );
+    expect(isRefreshPayload({ ...refresh, aud: "wrong" }, "issuer", "refresh-audience")).toBe(
+      false,
+    );
+    expect(access.iss).toBe("issuer");
+    expect(access.aud).toBe("access-audience");
     expect(access.iat).toBe(true);
     expect(access.exp).toBeGreaterThan(Math.floor(Date.now() / 1000));
   });

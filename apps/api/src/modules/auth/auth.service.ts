@@ -55,9 +55,13 @@ export function makeAccessPayload(
   userId: string,
   sessionId: string,
   ttlSeconds: number,
+  issuer: string,
+  audience: string,
 ): AccessTokenSignPayload {
   const now = Math.floor(Date.now() / 1000);
   return {
+    iss: issuer,
+    aud: audience,
     sub: userId,
     sid: sessionId,
     tokenType: "access",
@@ -70,9 +74,13 @@ export function makeRefreshPayload(
   userId: string,
   sessionId: string,
   ttlSeconds: number,
+  issuer: string,
+  audience: string,
 ): RefreshTokenSignPayload {
   const now = Math.floor(Date.now() / 1000);
   return {
+    iss: issuer,
+    aud: audience,
     sub: userId,
     sid: sessionId,
     tokenType: "refresh",
@@ -81,10 +89,16 @@ export function makeRefreshPayload(
   };
 }
 
-export function isAccessPayload(value: unknown): value is AccessTokenPayload {
+export function isAccessPayload(
+  value: unknown,
+  expectedIssuer: string,
+  expectedAudience: string,
+): value is AccessTokenPayload {
   if (!value || typeof value !== "object") return false;
   const payload = value as Record<string, unknown>;
   return (
+    payload.iss === expectedIssuer &&
+    payload.aud === expectedAudience &&
     typeof payload.sub === "string" &&
     typeof payload.sid === "string" &&
     payload.tokenType === "access" &&
@@ -92,10 +106,16 @@ export function isAccessPayload(value: unknown): value is AccessTokenPayload {
   );
 }
 
-export function isRefreshPayload(value: unknown): value is RefreshTokenPayload {
+export function isRefreshPayload(
+  value: unknown,
+  expectedIssuer: string,
+  expectedAudience: string,
+): value is RefreshTokenPayload {
   if (!value || typeof value !== "object") return false;
   const payload = value as Record<string, unknown>;
   return (
+    payload.iss === expectedIssuer &&
+    payload.aud === expectedAudience &&
     typeof payload.sub === "string" &&
     typeof payload.sid === "string" &&
     payload.tokenType === "refresh" &&

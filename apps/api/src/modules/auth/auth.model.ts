@@ -22,6 +22,8 @@ export const AuthMeResponseSchema = t.Object({
 });
 
 export type AccessTokenPayload = {
+  iss: string;
+  aud: string;
   sub: string;
   sid: string;
   tokenType: "access";
@@ -30,6 +32,8 @@ export type AccessTokenPayload = {
 };
 
 export type RefreshTokenPayload = {
+  iss: string;
+  aud: string;
   sub: string;
   sid: string;
   tokenType: "refresh";

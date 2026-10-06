@@ -112,6 +112,7 @@ export function loadApiConfig(source: EnvSource) {
   const environment = environmentValue(source);
   const authCookieSecure = booleanValue(source, "AUTH_COOKIE_SECURE", environment === "production");
   const authCookieSameSite = sameSiteValue(source);
+  const appName = stringValue(source, "APP_NAME", "vibe-api");
 
   if (authCookieSameSite === "none" && !authCookieSecure) {
     throw new Error("AUTH_COOKIE_SECURE must be true when AUTH_COOKIE_SAME_SITE=none");
@@ -127,7 +128,7 @@ export function loadApiConfig(source: EnvSource) {
     environment,
     host: stringValue(source, "API_HOST", "0.0.0.0"),
     port: positiveInteger(source, "API_PORT", 3000),
-    appName: stringValue(source, "APP_NAME", "vibe-api"),
+    appName,
     appVersion: stringValue(source, "APP_VERSION", "1.0.0"),
     corsOrigins: corsOriginsValue(source),
     databaseUrl: optionalString(source, "DATABASE_URL"),
@@ -140,6 +141,9 @@ export function loadApiConfig(source: EnvSource) {
     rateLimitDefaultMax: positiveInteger(source, "RATE_LIMIT_DEFAULT_MAX", 120),
     rateLimitAuthMax: positiveInteger(source, "RATE_LIMIT_AUTH_MAX", 10),
     rateLimitWindowMs: positiveInteger(source, "RATE_LIMIT_WINDOW_MS", 60_000),
+    jwtIssuer: stringValue(source, "JWT_ISSUER", `${appName}:${environment}`),
+    jwtAccessAudience: stringValue(source, "JWT_ACCESS_AUDIENCE", `${appName}:web`),
+    jwtRefreshAudience: stringValue(source, "JWT_REFRESH_AUDIENCE", `${appName}:refresh`),
     jwtAccessSecret: secretValue(
       source,
       "JWT_ACCESS_SECRET",

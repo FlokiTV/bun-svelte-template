@@ -7,6 +7,9 @@ describe("runtime config", () => {
     expect(config.port).toBe(3000);
     expect(config.corsOrigins).toEqual(["http://localhost:5173"]);
     expect(config.maxRequestBodyBytes).toBe(1024 * 1024);
+    expect(config.jwtIssuer).toBe("vibe-api:development");
+    expect(config.jwtAccessAudience).toBe("vibe-api:web");
+    expect(config.jwtRefreshAudience).toBe("vibe-api:refresh");
   });
 
   test("parses and normalizes comma-separated CORS origins", () => {

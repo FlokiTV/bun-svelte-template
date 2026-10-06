@@ -9,7 +9,7 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 ## Board e card
 - Board: board_0d8d387a-ee3a-41f9-9a3a-d7e25085d0a6 — bun-svelte-template — Security & production hardening v2
 - Status: active
-- Card atual: task_fc0ce73e-d4dc-4ea1-a78c-a8bf427c2a90 — 03 — Endurecer lifecycle e replay de auth_sessions — concluindo.
+- Card atual: task_4b38b849-c404-4826-92d0-b99299a90f87 — 04 — Adicionar issuer e audience aos JWTs — concluindo.
 
 ## Estado de partida
 - main sincronizada com origin/main.
@@ -34,7 +34,7 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 Cada card termina com testes/gates relevantes verdes e commit próprio antes de avançar.
 
 ## Próximo passo exato
-Commitar e fechar o card 03; iniciar issuer/audience JWT no card 04.
+Commitar e fechar o card 04; iniciar hardening do WebSocket público no card 05.
 
 
 ### Card 01 — refresh cookie deletion
@@ -66,3 +66,13 @@ Commitar e fechar o card 03; iniciar issuer/audience JWT no card 04.
 - auth integration test: PASS.
 - bun run verify: PASS.
 - E2E teve um primeiro flake por dev:web exit code 9; rerun isolado: 4/4 PASS.
+
+
+### Card 04 — JWT issuer/audience
+- access e refresh tokens incluem iss/aud explícitos.
+- defaults derivam de APP_NAME + environment e audiences distintas para web/refresh.
+- jose verify e type guards validam issuer/audience.
+- testes cobrem claims corretos e issuer/audience incorretos.
+- testes focados auth/config: PASS.
+- bun run verify: PASS.
+- bun run test:e2e: 4/4 PASS.

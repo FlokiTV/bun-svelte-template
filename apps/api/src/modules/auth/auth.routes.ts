@@ -41,10 +41,22 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 
       const sessionId = await createSessionForUser(user.id, config.jwtRefreshTtlSeconds);
       const accessToken = await accessJwt.sign(
-        makeAccessPayload(user.id, sessionId, config.jwtAccessTtlSeconds),
+        makeAccessPayload(
+          user.id,
+          sessionId,
+          config.jwtAccessTtlSeconds,
+          config.jwtIssuer,
+          config.jwtAccessAudience,
+        ),
       );
       const refreshToken = await refreshJwt.sign(
-        makeRefreshPayload(user.id, sessionId, config.jwtRefreshTtlSeconds),
+        makeRefreshPayload(
+          user.id,
+          sessionId,
+          config.jwtRefreshTtlSeconds,
+          config.jwtIssuer,
+          config.jwtRefreshAudience,
+        ),
       );
       const refreshCookie = cookie.refresh_token;
       if (!refreshCookie) throw new Error("Refresh cookie context is unavailable");
@@ -83,10 +95,22 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 
       const sessionId = await createSessionForUser(user.id, config.jwtRefreshTtlSeconds);
       const accessToken = await accessJwt.sign(
-        makeAccessPayload(user.id, sessionId, config.jwtAccessTtlSeconds),
+        makeAccessPayload(
+          user.id,
+          sessionId,
+          config.jwtAccessTtlSeconds,
+          config.jwtIssuer,
+          config.jwtAccessAudience,
+        ),
       );
       const refreshToken = await refreshJwt.sign(
-        makeRefreshPayload(user.id, sessionId, config.jwtRefreshTtlSeconds),
+        makeRefreshPayload(
+          user.id,
+          sessionId,
+          config.jwtRefreshTtlSeconds,
+          config.jwtIssuer,
+          config.jwtRefreshAudience,
+        ),
       );
       const refreshCookie = cookie.refresh_token;
       if (!refreshCookie) throw new Error("Refresh cookie context is unavailable");
@@ -135,8 +159,11 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
       }
 
       const rawRefreshToken = refreshCookie.value;
-      const payload = await refreshJwt.verify(rawRefreshToken);
-      if (!isRefreshPayload(payload)) {
+      const payload = await refreshJwt.verify(rawRefreshToken, {
+        issuer: config.jwtIssuer,
+        audience: config.jwtRefreshAudience,
+      });
+      if (!isRefreshPayload(payload, config.jwtIssuer, config.jwtRefreshAudience)) {
         clearRefreshCookie(refreshCookie);
         return status(
           401,
@@ -175,10 +202,22 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
       }
 
       const accessToken = await accessJwt.sign(
-        makeAccessPayload(user.id, rotation.sessionId, config.jwtAccessTtlSeconds),
+        makeAccessPayload(
+          user.id,
+          rotation.sessionId,
+          config.jwtAccessTtlSeconds,
+          config.jwtIssuer,
+          config.jwtAccessAudience,
+        ),
       );
       const refreshToken = await refreshJwt.sign(
-        makeRefreshPayload(user.id, rotation.sessionId, config.jwtRefreshTtlSeconds),
+        makeRefreshPayload(
+          user.id,
+          rotation.sessionId,
+          config.jwtRefreshTtlSeconds,
+          config.jwtIssuer,
+          config.jwtRefreshAudience,
+        ),
       );
 
       setRefreshCookie(refreshCookie, refreshToken);
@@ -215,8 +254,11 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
       const refreshCookie = cookie.refresh_token;
       const rawRefreshToken = refreshCookie?.value;
       if (typeof rawRefreshToken === "string") {
-        const payload = await refreshJwt.verify(rawRefreshToken);
-        if (isRefreshPayload(payload)) {
+        const payload = await refreshJwt.verify(rawRefreshToken, {
+          issuer: config.jwtIssuer,
+          audience: config.jwtRefreshAudience,
+        });
+        if (isRefreshPayload(payload, config.jwtIssuer, config.jwtRefreshAudience)) {
           await revokeSession(payload.sid);
         }
       }
