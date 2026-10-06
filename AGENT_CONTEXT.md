@@ -9,7 +9,7 @@ Executar todos os ajustes do board, sempre commitando as mudanças e testando tu
 ## Board e card
 - Board: board_4bc8a982-5a76-4ded-8544-6c66bcfcc27c — bun-svelte-template — Auth hardening & review follow-up
 - Status: active
-- Card atual: task_60211eee-ee09-4ff9-906b-1ce1542d2dd1 — 02 — Restringir authFetch à origin confiável da API — in_progress.
+- Card atual: task_e0d9de51-4156-4e37-ab3a-d2bed723a226 — 03 — Implementar refresh JWT single-flight no cliente — in_progress.
 
 ## Terminais gerenciados
 - Nenhum terminal ativo/relevante deste workspace nesta rodada.
@@ -40,7 +40,7 @@ Board criado com a seguinte ordem:
 - apps/api/package.json — peers/tipos explícitos para o linker isolado: @sinclair/typebox e bun-types.
 - bun.lock — importador da API atualizado; versões existentes preservadas.
 - apps/web/src/lib/auth/client.ts — authFetch falha fechado para origins diferentes da API configurada.
-- apps/web/src/lib/auth/client.test.ts — regressões para origin externa, relativa, default e VITE_API_URL customizada.
+- apps/web/src/lib/auth/client.test.ts — regressões para origin, refresh concorrente e falha sem retry loop.
 
 ## Validações
 Card 01 — baseline determinístico:
@@ -58,8 +58,16 @@ Card 02 — trusted origin:
 - bun run test:e2e: 2/2 PASS.
 - authFetch rejeita origin externa antes de anexar Authorization ou credentials.
 
+Card 03 — refresh single-flight:
+- 2 requests 401 concorrentes compartilham exatamente 1 refresh HTTP.
+- ambos fazem um único retry com o access token rotacionado.
+- falha de refresh limpa auth local e devolve o 401 original sem loop.
+- testes web: 7/7 PASS.
+- bun run verify: PASS.
+- bun run test:e2e: 2/2 PASS.
+
 ## Bloqueios
 - Nenhum bloqueio atual. Baseline reproduzível restaurado e gates verdes.
 
 ## Próximo passo exato
-Commitar e fechar o card 02; iniciar o card 03 para implementar refresh JWT single-flight com teste concorrente determinístico.
+Commitar e fechar o card 03; iniciar o card 04 para endurecer logout, inclusive falha de rede/HTTP e interação com refresh em voo.

@@ -15,6 +15,7 @@ function trustedApiUrl(input: string | URL): URL {
 }
 
 let accessToken: string | null = null;
+let refreshPromise: Promise<AuthSessionResponse> | null = null;
 
 export function getAccessToken(): string | null {
   return accessToken;
@@ -57,14 +58,22 @@ export async function login(email: string, password: string): Promise<AuthSessio
   return session;
 }
 
-export async function refreshAccessToken(): Promise<AuthSessionResponse> {
-  const response = await fetch(`${apiBaseUrl}/auth/refresh`, {
-    method: "POST",
-    credentials: "include",
+export function refreshAccessToken(): Promise<AuthSessionResponse> {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    const response = await fetch(`${apiBaseUrl}/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+    });
+    const session = await readJson<AuthSessionResponse>(response);
+    accessToken = session.accessToken;
+    return session;
+  })().finally(() => {
+    refreshPromise = null;
   });
-  const session = await readJson<AuthSessionResponse>(response);
-  accessToken = session.accessToken;
-  return session;
+
+  return refreshPromise;
 }
 
 export async function logout(): Promise<void> {

@@ -1,6 +1,6 @@
 import type { AuthSessionResponse } from "@vibe/contracts";
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { authFetch, clearAccessToken, login } from "./client";
+import { authFetch, clearAccessToken, getAccessToken, login } from "./client";
 
 const session: AuthSessionResponse = {
   accessToken: "access-token",
@@ -102,5 +102,112 @@ describe("authFetch trusted origin", () => {
     const headers = new Headers(init?.headers);
     expect(headers.get("authorization")).toBe("Bearer access-token");
     expect(init?.credentials).toBe("include");
+  });
+});
+
+describe("authFetch refresh single-flight", () => {
+  test("shares one refresh across concurrent 401 responses and retries with the new token", async () => {
+    let resolveRefresh!: () => void;
+    const refreshGate = new Promise<void>((resolve) => {
+      resolveRefresh = resolve;
+    });
+    let refreshCalls = 0;
+    const protectedAttempts = new Map<string, number>();
+    const retryAuthorizations: string[] = [];
+
+    const fetchMock = vi
+      .fn()
+      .mockImplementation(async (input: string | URL, init?: RequestInit) => {
+        const url = String(input);
+
+        if (url.endsWith("/auth/login")) {
+          return new Response(JSON.stringify(session), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+
+        if (url.endsWith("/auth/refresh")) {
+          refreshCalls += 1;
+          await refreshGate;
+          return new Response(
+            JSON.stringify({
+              ...session,
+              accessToken: "refreshed-token",
+            }),
+            {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            },
+          );
+        }
+
+        const attempts = (protectedAttempts.get(url) ?? 0) + 1;
+        protectedAttempts.set(url, attempts);
+        if (attempts === 1) return new Response(null, { status: 401 });
+
+        retryAuthorizations.push(new Headers(init?.headers).get("authorization") ?? "");
+        return new Response(null, { status: 204 });
+      });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await login("user@example.com", "password123");
+
+    const pending = Promise.all([
+      authFetch("http://localhost:3000/api/v1/private/a"),
+      authFetch("http://localhost:3000/api/v1/private/b"),
+    ]);
+
+    await vi.waitFor(() => expect(refreshCalls).toBe(1));
+    resolveRefresh();
+
+    const responses = await pending;
+    expect(responses.map((response) => response.status)).toEqual([204, 204]);
+    expect(refreshCalls).toBe(1);
+    expect(retryAuthorizations).toEqual(["Bearer refreshed-token", "Bearer refreshed-token"]);
+  });
+
+  test("clears local auth after refresh failure without retry loops", async () => {
+    let protectedCalls = 0;
+    let refreshCalls = 0;
+    const fetchMock = vi.fn().mockImplementation(async (input: string | URL) => {
+      const url = String(input);
+
+      if (url.endsWith("/auth/login")) {
+        return new Response(JSON.stringify(session), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+
+      if (url.endsWith("/auth/refresh")) {
+        refreshCalls += 1;
+        return new Response(
+          JSON.stringify({
+            error: {
+              code: "SESSION_REVOKED",
+              message: "Session is no longer active",
+              requestId: "request-1",
+            },
+          }),
+          {
+            status: 401,
+            headers: { "content-type": "application/json" },
+          },
+        );
+      }
+
+      protectedCalls += 1;
+      return new Response(null, { status: 401 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await login("user@example.com", "password123");
+    const response = await authFetch("http://localhost:3000/api/v1/private");
+
+    expect(response.status).toBe(401);
+    expect(refreshCalls).toBe(1);
+    expect(protectedCalls).toBe(1);
+    expect(getAccessToken()).toBeNull();
   });
 });
