@@ -228,6 +228,9 @@ describe("auth HTTP flow", () => {
       headers: { cookie: oldRefreshCookie },
     });
     expect(replayOldRefresh.status).toBe(401);
+    const replayDeleteCookie = replayOldRefresh.headers.get("set-cookie");
+    expect(replayDeleteCookie).toContain("Max-Age=0");
+    expect(replayDeleteCookie).toContain("Path=/api/v1/auth");
 
     const logout = await request("/api/v1/auth/logout", {
       method: "POST",
@@ -235,6 +238,9 @@ describe("auth HTTP flow", () => {
     });
     expect(logout.status).toBe(200);
     expect(await logout.json()).toEqual({ ok: true });
+    const logoutDeleteCookie = logout.headers.get("set-cookie");
+    expect(logoutDeleteCookie).toContain("Max-Age=0");
+    expect(logoutDeleteCookie).toContain("Path=/api/v1/auth");
 
     const refreshAfterLogout = await request("/api/v1/auth/refresh", {
       method: "POST",

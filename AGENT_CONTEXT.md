@@ -9,7 +9,7 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 ## Board e card
 - Board: board_0d8d387a-ee3a-41f9-9a3a-d7e25085d0a6 — bun-svelte-template — Security & production hardening v2
 - Status: active
-- Card atual: task_2bb2d769-8c58-4e2c-9e2e-bcc5ac4eaa28 — 01 — Corrigir remoção do refresh cookie — in_progress.
+- Card atual: task_2bb2d769-8c58-4e2c-9e2e-bcc5ac4eaa28 — 01 — Corrigir remoção do refresh cookie — concluindo.
 
 ## Estado de partida
 - main sincronizada com origin/main.
@@ -34,4 +34,13 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 Cada card termina com testes/gates relevantes verdes e commit próprio antes de avançar.
 
 ## Próximo passo exato
-Centralizar set/clear do refresh cookie com Path=/api/v1/auth, adicionar regressões HTTP para logout/refresh inválido, executar verify/E2E e commitar o card 01.
+Commitar e fechar o card 01; iniciar validação de CORS_ORIGINS e proteção Origin/CSRF do card 02.
+
+
+### Card 01 — refresh cookie deletion
+- set/clear centralizados em auth.cookie.ts.
+- criação e deleção usam Path=/api/v1/auth.
+- regressões HTTP confirmam Max-Age=0 + Path correto em logout e refresh inválido.
+- auth integration test: PASS.
+- bun run verify: PASS.
+- bun run test:e2e: 4/4 PASS.

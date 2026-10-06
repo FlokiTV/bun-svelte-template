@@ -4,6 +4,7 @@ import { ErrorResponseSchema, errorResponse } from "../../core/error-response";
 import { ERROR_CODES } from "../../core/errors";
 import { rateLimitGuard } from "../../core/rate-limit";
 import { requestIdFor } from "../../core/request-id";
+import { clearRefreshCookie, setRefreshCookie } from "./auth.cookie";
 import { authGuard } from "./auth.guard";
 import { AuthCredentialsBody, AuthMeResponseSchema, AuthSessionResponseSchema } from "./auth.model";
 import { findUserById, revokeSession } from "./auth.repository";
@@ -47,14 +48,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
       const refreshCookie = cookie.refresh_token;
       if (!refreshCookie) throw new Error("Refresh cookie context is unavailable");
 
-      refreshCookie.value = refreshToken;
-      refreshCookie.set({
-        httpOnly: true,
-        secure: config.authCookieSecure,
-        sameSite: config.authCookieSameSite,
-        path: "/api/v1/auth",
-        maxAge: config.jwtRefreshTtlSeconds,
-      });
+      setRefreshCookie(refreshCookie, refreshToken);
 
       return toSessionResponse(accessToken, config.jwtAccessTtlSeconds, user);
     },
@@ -96,14 +90,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
       const refreshCookie = cookie.refresh_token;
       if (!refreshCookie) throw new Error("Refresh cookie context is unavailable");
 
-      refreshCookie.value = refreshToken;
-      refreshCookie.set({
-        httpOnly: true,
-        secure: config.authCookieSecure,
-        sameSite: config.authCookieSameSite,
-        path: "/api/v1/auth",
-        maxAge: config.jwtRefreshTtlSeconds,
-      });
+      setRefreshCookie(refreshCookie, refreshToken);
 
       return toSessionResponse(accessToken, config.jwtAccessTtlSeconds, user);
     },
@@ -138,7 +125,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
       const rawRefreshToken = refreshCookie.value;
       const payload = await refreshJwt.verify(rawRefreshToken);
       if (!isRefreshPayload(payload)) {
-        refreshCookie.remove();
+        clearRefreshCookie(refreshCookie);
         return status(
           401,
           errorResponse(
@@ -151,7 +138,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 
       const user = await findUserById(payload.sub);
       if (!user) {
-        refreshCookie.remove();
+        clearRefreshCookie(refreshCookie);
         return status(
           401,
           errorResponse(
@@ -168,7 +155,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
         config.jwtRefreshTtlSeconds,
       );
       if (!nextSessionId) {
-        refreshCookie.remove();
+        clearRefreshCookie(refreshCookie);
         return status(
           401,
           errorResponse(
@@ -186,14 +173,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
         makeRefreshPayload(user.id, nextSessionId, config.jwtRefreshTtlSeconds),
       );
 
-      refreshCookie.value = refreshToken;
-      refreshCookie.set({
-        httpOnly: true,
-        secure: config.authCookieSecure,
-        sameSite: config.authCookieSameSite,
-        path: "/api/v1/auth",
-        maxAge: config.jwtRefreshTtlSeconds,
-      });
+      setRefreshCookie(refreshCookie, refreshToken);
 
       return toSessionResponse(accessToken, config.jwtAccessTtlSeconds, user);
     },
@@ -221,7 +201,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
         }
       }
 
-      refreshCookie?.remove();
+      clearRefreshCookie(refreshCookie);
       return { ok: true };
     },
     {
