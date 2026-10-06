@@ -8,8 +8,8 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 
 ## Board e card
 - Board: board_0d8d387a-ee3a-41f9-9a3a-d7e25085d0a6 — bun-svelte-template — Security & production hardening v2
-- Status: active
-- Card atual: task_49745565-35e1-4cd6-86a6-8a921dcab86b — 10 — Documentação, gate final e push — in_progress.
+- Status: done
+- Card final: task_49745565-35e1-4cd6-86a6-8a921dcab86b — 10 — Documentação, gate final e push — done.
 
 ## Estado de partida
 - main sincronizada com origin/main.
@@ -34,7 +34,7 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 Cada card termina com testes/gates relevantes verdes e commit próprio antes de avançar.
 
 ## Próximo passo exato
-Commitar documentação/contexto final, push para origin/main e exigir a última CI remota verde antes de fechar o card e o board.
+Nenhum ajuste pendente neste board. Manter o template via novos boards/PRs para mudanças futuras.
 
 ### Card 01 — refresh cookie deletion
 - set/clear centralizados em auth.cookie.ts.
@@ -162,4 +162,5 @@ Commitar documentação/contexto final, push para origin/main e exigir a última
 - drizzle-kit check: PASS.
 - lint: PASS.
 - build config/contracts/API/web: PASS.
-- verify/E2E finais serão executados pela CI Linux após o push final devido limitação de pagefile do Windows local.
+- CI 37489975385: PASS — quality (doctor + audit + verify), database (PostgreSQL 17 + migrations + db:check + test:db) e e2e.
+- main sincronizada com origin/main após o commit 92f6030; working tree limpo antes desta sincronização final de contexto.
