@@ -9,7 +9,7 @@ Restaurar o modelo arquitetural pretendido desde o início: frontend Svelte 5 so
 ## Board e card
 - Board: board_5be0dd95-c8a7-45a4-ab34-b90610aaef5e — bun-svelte-template — Migrate web to Rspack
 - Status: active
-- Card atual: task_09865e83-3287-4f34-8ba7-48d0c760f986 — 03 — Guardrails e docs — in_progress.
+- Card atual: task_40c46c36-f1bb-4bf0-90c3-9fa46f5e18ec — 04 — Gates, audit e push — in_progress.
 
 ## Estado de partida
 - main sincronizada com origin/main.
@@ -34,7 +34,7 @@ Restaurar o modelo arquitetural pretendido desde o início: frontend Svelte 5 so
 Cada card termina com testes/gates relevantes verdes e commit próprio antes de avançar.
 
 ## Próximo passo exato
-Finalizar guardrails/docs Rspack, commitar card 03 e rodar gates completos/CI no card 04.
+Commitar este handoff, push da migração Rspack para origin/main e exigir CI quality/database/e2e verde.
 
 ### Card 01 — refresh cookie deletion
 - set/clear centralizados em auth.cookie.ts.
@@ -229,3 +229,24 @@ Finalizar guardrails/docs Rspack, commitar card 03 e rodar gates completos/CI no
 - testes web migrados para Rstest 0.12.3 + adapter-rsbuild; 13/13 PASS;
 - svelte-check: 0 erros / 0 warnings;
 - Biome 2.5.15 permanece formatter/linter canônico.
+
+
+### Gates finais da migração Rspack
+- bun install --frozen-lockfile (Bun 1.4.2): PASS; 172 installs / 288 packages.
+- doctor: PASS; confirma frontend bundler=Rspack e rsbuild.config.ts.
+- architecture:check: PASS.
+- Biome lint: PASS em 103 arquivos.
+- audit:ci: PASS; nenhum high/critical.
+- audit completo: 1 advisory moderate de esbuild <=0.24.2, exclusivamente via drizzle-kit -> @esbuild-kit/esm-loader -> @esbuild-kit/core-utils; não pertence ao frontend.
+- bun pm why @rspack/core: @rspack/core 2.2.8 via @rsbuild/core 2.2.12.
+- bun pm why vite: nenhum pacote instalado.
+- bun pm why @sveltejs/kit: nenhum pacote instalado.
+- web Rstest: 13/13 PASS.
+- svelte-check: 0 erros / 0 warnings.
+- bun run verify: PASS; API 32/32, web 13/13, OpenAPI 11 paths e builds completos.
+- bun run test:e2e: PASS 4/4 no dev server Rsbuild/Rspack.
+- build web: PASS; build/index.html + build/200.html + assets Rspack.
+- hook __vibeAuthClient de E2E: 0 ocorrências no bundle de produção.
+- drizzle-kit check: PASS.
+- TypeScript 7 continua adiado; único outdated, enquanto svelte-check atual permanece no baseline TS 6.
+- commits da migração até aqui: 3e05c69, b5b537f, 7b66e21, 3e7a5f9.
