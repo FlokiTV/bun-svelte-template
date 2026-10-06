@@ -8,8 +8,8 @@ Restaurar o modelo arquitetural pretendido desde o início: frontend Svelte 5 so
 
 ## Board e card
 - Board: board_5be0dd95-c8a7-45a4-ab34-b90610aaef5e — bun-svelte-template — Migrate web to Rspack
-- Status: active
-- Card atual: task_40c46c36-f1bb-4bf0-90c3-9fa46f5e18ec — 04 — Gates, audit e push — in_progress.
+- Status: done
+- Card final: task_40c46c36-f1bb-4bf0-90c3-9fa46f5e18ec — 04 — Gates, audit e push — done.
 
 ## Estado de partida
 - main sincronizada com origin/main.
@@ -34,7 +34,7 @@ Restaurar o modelo arquitetural pretendido desde o início: frontend Svelte 5 so
 Cada card termina com testes/gates relevantes verdes e commit próprio antes de avançar.
 
 ## Próximo passo exato
-Commitar este handoff, push da migração Rspack para origin/main e exigir CI quality/database/e2e verde.
+Nenhum ajuste pendente nesta migração. Frontend Rspack publicado e validado.
 
 ### Card 01 — refresh cookie deletion
 - set/clear centralizados em auth.cookie.ts.
@@ -250,3 +250,12 @@ Commitar este handoff, push da migração Rspack para origin/main e exigir CI qu
 - drizzle-kit check: PASS.
 - TypeScript 7 continua adiado; único outdated, enquanto svelte-check atual permanece no baseline TS 6.
 - commits da migração até aqui: 3e05c69, b5b537f, 7b66e21, 3e7a5f9.
+
+
+### Publicação da migração Rspack
+- push para origin/main executado no commit e211933.
+- CI 37529736481: PASS.
+- quality: doctor + audit:ci + verify PASS.
+- database: PostgreSQL 17 + frozen install + migrations + db:check + test:db PASS.
+- e2e: Playwright no Rsbuild dev server PASS.
+- main sincronizada com origin/main após a publicação técnica.
