@@ -1,109 +1,55 @@
 # Agent Context
 
-- Última atualização: 2026-09-30T20:53:00-03:00
-- Pasta de trabalho: C:\Users\Dz\Desktop\bun-svelte-vibecode-template
+- Última atualização: 2026-10-06T08:57:30-03:00
+- Pasta de trabalho: D:\DEV\bun-svelte-template
 
 ## Pedido atual do usuário
-Revisar o template, testar o fluxo real em execução, preparar um banco Supabase de teste e validar o template. Depois, testar todas as requisições e fluxos relevantes.
+Executar todos os ajustes do board, sempre commitando as mudanças e testando tudo antes de avançar.
 
 ## Board e card
-- Board: board_a2bc0b21-72f7-437d-a648-2e072c87b8be — bun-svelte-vibecode-template
-- Card: task_abc47f20-2d47-4c34-ac04-9bb1a8531c94 — concluído.
+- Board: board_4bc8a982-5a76-4ded-8544-6c66bcfcc27c — bun-svelte-template — Auth hardening & review follow-up
+- Status: active
+- Card atual: task_e7d9a6c3-e9a1-4394-9f50-f2add39df746 — 01 — Restaurar baseline determinístico do workspace — in_progress.
 
-## Trabalho concluído
-- Dependências instaladas e bun.lock gerado.
-- Baseline Biome normalizado e configuração migrada.
-- Biome ignora artefatos gerados (.svelte-kit/build/dist/coverage/playwright-report/test-results), tornando verify idempotente.
-- Corrigida tipagem do scripts/db-local.ts.
-- Corrigida compatibilidade do auth JWT com @elysiajs/jwt 1.4.2.
-- Corrigido acesso seguro ao refresh cookie.
-- Corrigido logging de erros Elysia.
-- Corrigido Playwright localhost versus 127.0.0.1.
-- Corrigido .gitignore para versionar migrations Drizzle.
-- Supabase CLI inicializado em supabase/config.toml.
-- Migration Drizzle gerada em apps/api/drizzle/0000_brainy_solo.sql.
-- Migration endurecida para Supabase com RLS e REVOKE para anon/authenticated.
-- docs/OPERATIONS.md e apps/api/.env.example documentam Supabase local/cloud.
-- Adicionado teste HTTP completo permanente em apps/api/src/modules/auth/auth.routes.integration.test.ts.
-- Adicionada cobertura permanente de GET /ready e 404 em apps/api/src/core/ops.routes.test.ts.
+## Terminais gerenciados
+- Nenhum terminal ativo/relevante deste workspace nesta rodada.
 
-## Supabase de teste
-- Projeto: bun-svelte-vibecode-template-test
-- Project ref: wdtsykjsosdcnmnmfydz
-- Região: sa-east-1
-- Custo informado: US$ 0/mês
-- Status: ACTIVE_HEALTHY
-- Migration initial_auth_schema aplicada com sucesso.
-- Tabelas public.users e public.auth_sessions criadas.
-- RLS ativo nas duas tabelas.
-- anon e authenticated sem DML.
-- FK auth_sessions.user_id -> users.id com ON DELETE CASCADE validada.
-- Fluxo de persistência real validado via SQL no Supabase:
-  - criação de usuário
-  - bloqueio de email duplicado
-  - criação de sessão
-  - rotação de sessão
-  - rejeição de replay de sessão revogada
-  - revogação de sessão no logout
-  - cascade cleanup
-- O teste limpou os dados: 0 usuários e 0 sessões de validação restantes.
-- Advisor de performance: sem achados.
-- Advisor de segurança: apenas INFO rls_enabled_no_policy, esperado porque Data API está deliberadamente bloqueada para estas tabelas.
+## Estado atual
+A revisão técnica confirmou arquitetura geral consistente, Git limpo em main...origin/main e guardrails de arquitetura/secret scan funcionais.
+Achados priorizados:
+- authFetch pode anexar Bearer token a origin externa se usado com URL arbitrária.
+- requests 401 concorrentes podem disparar múltiplos refreshes contra uma rotação single-use de refresh token.
+- logout precisa limpar estado local de forma robusta mesmo sob falha de rede e coordenar refresh em voo.
+- auth usa parsing de erro próprio e perde status/code/requestId do contrato ApiError.
+- cobertura frontend/E2E de auth é insuficiente para os fluxos críticos.
+- users.email declara UNIQUE e índice explícito potencialmente redundante.
+- ambiente local não está reproduzível: projeto fixa Bun 1.4.2, máquina executa 1.4.0, node_modules raiz ausente e workspaces parcialmente instalados.
 
-## Cobertura HTTP/API
-Rotas OpenAPI confirmadas:
-- POST /api/v1/auth/register
-- POST /api/v1/auth/login
-- POST /api/v1/auth/refresh
-- POST /api/v1/auth/logout
-- GET /api/v1/auth/me
-- POST /api/v1/example/echo
-- GET /api/v1/health/
-- GET /health
-- GET /ready
-- GET /meta
-- WS /ws
+Board criado com a seguinte ordem:
+1. Restaurar baseline determinístico do workspace.
+2. Restringir authFetch à origin confiável da API.
+3. Implementar refresh JWT single-flight no cliente.
+4. Endurecer logout e ciclo de estado local.
+5. Unificar erros de auth com o contrato ApiError.
+6. Ampliar cobertura de autenticação no frontend e E2E.
+7. Remover índice redundante de users.email com migration nova, após confirmação.
+8. Gate final, documentação e readiness do template.
 
-Auth HTTP real via Elysia app.handle:
-- register válido
-- register inválido -> 422
-- email duplicado -> 409
-- senha incorreta -> 401
-- login válido
-- email case-insensitive
-- /me sem Bearer -> 401
-- /me com Bearer inválido -> 401
-- /me com Bearer válido -> 200
-- refresh válido
-- refresh token rotacionado
-- replay do refresh antigo -> 401
-- logout -> 200
-- refresh após logout -> 401
-- cookie HttpOnly, SameSite=Lax e Path=/api/v1/auth validados
+## Arquivos alterados
+- AGENT_CONTEXT.md — sincronizado com o novo board e o plano atual.
+- Nenhum arquivo de código foi alterado.
 
-Realtime:
-- API real iniciada na porta 3000.
-- WebSocket ws://localhost:3000/ws testado pela rede.
-- connection.ready recebido.
-- echo de "ping" recebido corretamente.
-- servidor temporário encerrado após o teste.
+## Validações
+Revisão anterior desta rodada:
+- git status --short --branch: main...origin/main, limpo.
+- bun --version: 1.4.0; packageManager do projeto: bun@1.4.2.
+- bun run verify: architecture PASS, secrets PASS, interrompido no lint por dependências locais ausentes.
+- bun.lock contém as dependências transitivas que faltam localmente, compatível com instalação incompleta e não necessariamente lockfile defeituoso.
+- Checks/testes/builds parciais também bloquearam por dependências ausentes nos node_modules locais.
 
-## Validações finais
-- bun run verify: PASS
-  - architecture: PASS
-  - secrets: PASS
-  - lint: PASS
-  - typecheck: PASS
-  - API tests: 19 pass / 0 fail / 69 asserts
-  - web Vitest: 1 pass
-  - OpenAPI: 11 paths válidos
-  - builds: PASS
-- bun run test:e2e: PASS
-  - mobile-chromium: PASS
-  - desktop-chromium: PASS
+## Bloqueios
+- Nenhum bloqueio de planejamento.
+- Para implementação/validação confiável, primeiro restaurar o ambiente com Bun 1.4.2 e instalação frozen coerente com bun.lock.
 
-## Observações
-- A integração Supabase não fornece a senha/DATABASE_URL do Postgres e bloqueou a tentativa de provisionar um login PostgreSQL dedicado. Portanto, o runtime local da API não foi conectado diretamente ao Postgres hospedado nesta rodada.
-- Mesmo assim, o comportamento HTTP completo foi testado com o repositório isolado mantendo o contrato real, enquanto a máquina de estados de persistência/constraints foi testada separadamente no Supabase real.
-- Esta cópia do workspace não contém .git, então não houve commit/push.
-- package.json declara Bun 1.4.2; o PC executou Bun 1.3.14. Verify e E2E passaram mesmo assim.
+## Próximo passo exato
+Restaurar o baseline determinístico com Bun 1.4.2 e instalação frozen; rodar doctor/verify/E2E, registrar o resultado e commitar antes de avançar para o card 02.
