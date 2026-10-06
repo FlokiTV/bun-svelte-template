@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import { config } from "../../config";
 import { ErrorResponseSchema, errorResponse } from "../../core/error-response";
 import { ERROR_CODES } from "../../core/errors";
+import { requestOriginIsAllowed } from "../../core/origin";
 import { rateLimitGuard } from "../../core/rate-limit";
 import { requestIdFor } from "../../core/request-id";
 import { clearRefreshCookie, setRefreshCookie } from "./auth.cookie";
@@ -110,6 +111,17 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
   .post(
     "/refresh",
     async ({ cookie, accessJwt, refreshJwt, request, status }) => {
+      if (!requestOriginIsAllowed(request)) {
+        return status(
+          403,
+          errorResponse(
+            ERROR_CODES.FORBIDDEN,
+            "Request origin is not allowed",
+            requestIdFor(request),
+          ),
+        );
+      }
+
       const refreshCookie = cookie.refresh_token;
       if (!refreshCookie || typeof refreshCookie.value !== "string") {
         return status(
@@ -182,6 +194,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
       response: {
         200: AuthSessionResponseSchema,
         401: ErrorResponseSchema,
+        403: ErrorResponseSchema,
       },
       detail: {
         tags: ["Auth"],
@@ -191,7 +204,18 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
   )
   .post(
     "/logout",
-    async ({ cookie, refreshJwt }) => {
+    async ({ cookie, refreshJwt, request, status }) => {
+      if (!requestOriginIsAllowed(request)) {
+        return status(
+          403,
+          errorResponse(
+            ERROR_CODES.FORBIDDEN,
+            "Request origin is not allowed",
+            requestIdFor(request),
+          ),
+        );
+      }
+
       const refreshCookie = cookie.refresh_token;
       const rawRefreshToken = refreshCookie?.value;
       if (typeof rawRefreshToken === "string") {
@@ -205,7 +229,10 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
       return { ok: true };
     },
     {
-      response: t.Object({ ok: t.Boolean() }),
+      response: {
+        200: t.Object({ ok: t.Boolean() }),
+        403: ErrorResponseSchema,
+      },
       detail: {
         tags: ["Auth"],
         summary: "Revoke the current refresh session",

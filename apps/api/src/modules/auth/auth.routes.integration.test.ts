@@ -196,9 +196,21 @@ describe("auth HTTP flow", () => {
     expect(loginCookieHeader).toBeTruthy();
     const oldRefreshCookie = cookiePair(loginCookieHeader ?? "");
 
+    const blockedRefresh = await request("/api/v1/auth/refresh", {
+      method: "POST",
+      headers: {
+        cookie: oldRefreshCookie,
+        origin: "https://evil.example",
+      },
+    });
+    expect(blockedRefresh.status).toBe(403);
+
     const refresh = await request("/api/v1/auth/refresh", {
       method: "POST",
-      headers: { cookie: oldRefreshCookie },
+      headers: {
+        cookie: oldRefreshCookie,
+        origin: "http://localhost:5173",
+      },
     });
     expect(refresh.status).toBe(200);
 
@@ -232,9 +244,21 @@ describe("auth HTTP flow", () => {
     expect(replayDeleteCookie).toContain("Max-Age=0");
     expect(replayDeleteCookie).toContain("Path=/api/v1/auth");
 
+    const blockedLogout = await request("/api/v1/auth/logout", {
+      method: "POST",
+      headers: {
+        cookie: newRefreshCookie,
+        origin: "https://evil.example",
+      },
+    });
+    expect(blockedLogout.status).toBe(403);
+
     const logout = await request("/api/v1/auth/logout", {
       method: "POST",
-      headers: { cookie: newRefreshCookie },
+      headers: {
+        cookie: newRefreshCookie,
+        origin: "http://localhost:5173",
+      },
     });
     expect(logout.status).toBe(200);
     expect(await logout.json()).toEqual({ ok: true });

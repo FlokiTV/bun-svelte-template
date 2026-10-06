@@ -57,6 +57,34 @@ function csvValue(source: EnvSource, name: string, fallback: string[]): string[]
   return [...new Set(values)];
 }
 
+function corsOriginsValue(source: EnvSource): string[] {
+  const values = csvValue(source, "CORS_ORIGINS", [
+    source.WEB_ORIGIN?.trim() || "http://localhost:5173",
+  ]);
+
+  const origins = values.map((value) => {
+    if (value === "*") throw new Error("CORS_ORIGINS must not contain wildcard origins");
+
+    let url: URL;
+    try {
+      url = new URL(value);
+    } catch {
+      throw new Error(`CORS_ORIGINS contains an invalid URL: ${value}`);
+    }
+
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      throw new Error(`CORS_ORIGINS only supports http/https origins: ${value}`);
+    }
+    if (url.username || url.password || url.pathname !== "/" || url.search || url.hash) {
+      throw new Error(`CORS_ORIGINS entries must be origins without path/query/fragment: ${value}`);
+    }
+
+    return url.origin;
+  });
+
+  return [...new Set(origins)];
+}
+
 function secretValue(
   source: EnvSource,
   name: string,
@@ -101,7 +129,7 @@ export function loadApiConfig(source: EnvSource) {
     port: positiveInteger(source, "API_PORT", 3000),
     appName: stringValue(source, "APP_NAME", "vibe-api"),
     appVersion: stringValue(source, "APP_VERSION", "1.0.0"),
-    corsOrigins: csvValue(source, "CORS_ORIGINS", [source.WEB_ORIGIN ?? "http://localhost:5173"]),
+    corsOrigins: corsOriginsValue(source),
     databaseUrl: optionalString(source, "DATABASE_URL"),
     maxRequestBodyBytes: positiveInteger(source, "API_MAX_BODY_MB", 1) * 1024 * 1024,
     idleTimeoutSeconds: positiveInteger(source, "API_IDLE_TIMEOUT_SECONDS", 30),

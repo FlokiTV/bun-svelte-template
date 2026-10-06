@@ -9,12 +9,24 @@ describe("runtime config", () => {
     expect(config.maxRequestBodyBytes).toBe(1024 * 1024);
   });
 
-  test("parses comma-separated CORS origins", () => {
+  test("parses and normalizes comma-separated CORS origins", () => {
     const config = loadApiConfig({
       NODE_ENV: "test",
-      CORS_ORIGINS: "https://a.example, https://b.example,https://a.example",
+      CORS_ORIGINS: "https://a.example/, https://b.example,https://a.example",
     });
     expect(config.corsOrigins).toEqual(["https://a.example", "https://b.example"]);
+  });
+
+  test("rejects wildcard and non-origin CORS values", () => {
+    for (const value of [
+      "*",
+      "https://app.example/path",
+      "https://app.example?query=1",
+      "ftp://app.example",
+      "not-a-url",
+    ]) {
+      expect(() => loadApiConfig({ NODE_ENV: "test", CORS_ORIGINS: value })).toThrow();
+    }
   });
 
   test("rejects missing production secrets", () => {
