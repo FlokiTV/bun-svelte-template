@@ -1,126 +1,37 @@
 # Agent Context
 
-- Última atualização: 2026-10-06T08:57:30-03:00
+- Última atualização: 2026-10-06
 - Pasta de trabalho: D:\DEV\bun-svelte-template
 
 ## Pedido atual do usuário
-Executar todos os ajustes do board, sempre commitando as mudanças e testando tudo antes de avançar.
+Executar todos os ajustes da segunda revisão técnica, sempre commitando e testando, e publicar o resultado final em origin/main.
 
 ## Board e card
-- Board: board_4bc8a982-5a76-4ded-8544-6c66bcfcc27c — bun-svelte-template — Auth hardening & review follow-up
-- Status: done
-- Card final: task_5f867538-409a-43e9-afa0-2c5006e31924 — 08 — Gate final, documentação e readiness do template — done.
+- Board: board_0d8d387a-ee3a-41f9-9a3a-d7e25085d0a6 — bun-svelte-template — Security & production hardening v2
+- Status: active
+- Card atual: task_2bb2d769-8c58-4e2c-9e2e-bcc5ac4eaa28 — 01 — Corrigir remoção do refresh cookie — in_progress.
 
-## Terminais gerenciados
-- Nenhum terminal ativo/relevante deste workspace nesta rodada.
+## Estado de partida
+- main sincronizada com origin/main.
+- Board anterior concluído com authFetch trusted-origin, refresh single-flight, logout local hardening, ApiError compartilhado, cobertura E2E e migration 0001.
+- CI remota do push anterior: PASS.
+- Segunda revisão confirmou bug de remoção do refresh cookie: cookie criado em Path=/api/v1/auth, mas cookie.remove() emite deleção em Path=/.
+- Segunda revisão também identificou: CI sem PostgreSQL real, necessidade de Origin/CSRF para SameSite=None, lifecycle/replay de sessões, JWT iss/aud, WebSocket público sem hardening específico, falta de durationMs, bun audit ausente da CI e upgrades pendentes.
 
-## Estado atual
-A revisão técnica confirmou arquitetura geral consistente, Git limpo em main...origin/main e guardrails de arquitetura/secret scan funcionais.
-Achados priorizados:
-- authFetch pode anexar Bearer token a origin externa se usado com URL arbitrária.
-- requests 401 concorrentes podem disparar múltiplos refreshes contra uma rotação single-use de refresh token.
-- logout precisa limpar estado local de forma robusta mesmo sob falha de rede e coordenar refresh em voo.
-- auth usa parsing de erro próprio e perde status/code/requestId do contrato ApiError.
-- cobertura frontend/E2E de auth é insuficiente para os fluxos críticos.
-- users.email declara UNIQUE e índice explícito potencialmente redundante.
-- ambiente local não está reproduzível: projeto fixa Bun 1.4.2, máquina executa 1.4.0, node_modules raiz ausente e workspaces parcialmente instalados.
+## Ordem do board v2
+1. Corrigir remoção do refresh cookie.
+2. Validar CORS e proteção Origin/CSRF.
+3. Endurecer lifecycle/replay de auth_sessions.
+4. Adicionar issuer/audience aos JWTs.
+5. Endurecer WebSocket.
+6. Adicionar durationMs à observabilidade.
+7. CI com PostgreSQL real e migrations.
+8. Audit + upgrades patch/minor.
+9. Upgrades major deliberados.
+10. Documentação, gate final e push.
 
-Board criado com a seguinte ordem:
-1. Restaurar baseline determinístico do workspace.
-2. Restringir authFetch à origin confiável da API.
-3. Implementar refresh JWT single-flight no cliente.
-4. Endurecer logout e ciclo de estado local.
-5. Unificar erros de auth com o contrato ApiError.
-6. Ampliar cobertura de autenticação no frontend e E2E.
-7. Remover índice redundante de users.email com migration nova, após confirmação.
-8. Gate final, documentação e readiness do template.
-
-## Arquivos alterados
-- AGENT_CONTEXT.md — sincronizado com execução e validações.
-- apps/api/package.json — peers/tipos explícitos para o linker isolado: @sinclair/typebox e bun-types.
-- bun.lock — importador da API atualizado; versões existentes preservadas.
-- apps/web/src/lib/auth/client.ts — authFetch falha fechado para origins diferentes da API configurada.
-- apps/web/src/lib/auth/client.test.ts — regressões para origin, refresh, logout e ApiError.
-- apps/web/src/lib/api/request.ts — readJsonResponse compartilhado para preservar ApiError.
-- tests/e2e/auth-client.spec.ts — journey browser real login → 401 → refresh → retry → logout, sem UI de login nem banco real.
-- apps/api/src/db/schema/auth.schema.ts — removido índice explícito redundante de users.email.
-- apps/api/drizzle/0001_sturdy_bloodstrike.sql + meta — migration incremental DROP INDEX; 0000 preservada.
-
-## Validações
-Card 01 — baseline determinístico:
-- Bun 1.4.2 executado de forma isolada via bunx, sem alterar instalação global.
-- bun install --frozen-lockfile: PASS após limpeza das árvores node_modules stale.
-- bun run doctor: PASS; avisos apenas .env ausente, Docker ausente e DB check opcional não executado.
-- bun run verify: PASS — architecture, secrets, Biome, typecheck, API 19/19, web 1/1, OpenAPI 11 paths e builds.
-- bun run test:e2e: PASS — mobile-chromium e desktop-chromium, 2/2.
-- Playwright Chromium 1243 instalado localmente na máquina para viabilizar o E2E.
-- Causa do baseline quebrado: workspaces com node_modules stale e dependências de peer/tipos implícitas sob o linker isolado do Bun 1.4.2.
-
-Card 02 — trusted origin:
-- testes web: 5/5 PASS.
-- bun run verify: PASS.
-- bun run test:e2e: 2/2 PASS.
-
-Card 05 — ApiError compartilhado:
-- auth reutiliza readJsonResponse da camada HTTP; parsing duplicado removido.
-- erros padronizados preservam status/code/message/requestId.
-- corpo inválido cai em HTTP_ERROR com x-request-id.
-- authFetch continua decidindo refresh a partir do status 401 bruto.
-- testes web: 12/12 PASS.
-- bun run verify: PASS.
-- bun run test:e2e: 2/2 PASS.
-
-Card 04 — logout hardening:
-- logout limpa token local antes do request remoto e também em finally.
-- falha de rede e HTTP remoto são propagadas sem restaurar auth local.
-- logout invalida gerações de auth; refresh em voo não pode repopular o token depois da saída.
-- testes web: 10/10 PASS.
-- bun run verify: PASS.
-- bun run test:e2e: 2/2 PASS.
-- authFetch rejeita origin externa antes de anexar Authorization ou credentials.
-
-Card 03 — refresh single-flight:
-- 2 requests 401 concorrentes compartilham exatamente 1 refresh HTTP.
-- ambos fazem um único retry com o access token rotacionado.
-- falha de refresh limpa auth local e devolve o 401 original sem loop.
-- testes web: 7/7 PASS.
-- bun run verify: PASS.
-- bun run test:e2e: 2/2 PASS.
-
-## Bloqueios
-- Nenhum bloqueio de release. `doctor` apenas avisa que `apps/api/.env` e Docker não estão presentes, portanto o check opcional de conectividade PostgreSQL local foi pulado.
+## Regra de execução
+Cada card termina com testes/gates relevantes verdes e commit próprio antes de avançar.
 
 ## Próximo passo exato
-Nenhum ajuste pendente neste board. Próxima ação opcional: push dos commits para origin/main quando desejado.
-
-
-### Card 06 — cobertura de autenticação
-- register/login mantêm access token apenas em memória; localStorage não é usado.
-- unitários cobrem 401 → refresh → retry, refresh concorrente single-flight, origin externa, logout sob falha e ApiError.
-- testes web: 13/13 PASS.
-- E2E auth em browser real: login → /me 401 → 1 refresh → retry com token novo → logout; validado em mobile e desktop.
-- bun run verify: PASS.
-- bun run test:e2e: 4/4 PASS.
-
-
-### Card 07 — índice redundante users.email
-- migration 0000 confirmada intacta.
-- Drizzle db:generate: sem mudanças adicionais.
-- drizzle-kit check: PASS.
-- migration 0001 contém somente DROP INDEX "users_email_idx".
-- validação em PostgreSQL WASM descartável (PGlite 0.5.8): antes users_email_idx + users_email_unique + PK; após 0001 users_email_unique + PK.
-- Docker/Postgres nativo e Supabase remoto não estavam disponíveis nesta máquina; a validação descartável foi feita fora do repositório e o diretório temporário foi removido.
-- bun run verify: PASS.
-- bun run test:e2e: 4/4 PASS.
-
-
-### Card 08 — gate final e readiness
-- docs/AUTH.md atualizado com token em memória, trusted API origin, refresh single-flight, logout hardening e ApiError.
-- docs/SECURITY.md atualizado com boundary de origin, refresh single-flight e proteção contra refresh pós-logout.
-- bun install --frozen-lockfile com Bun 1.4.2: PASS, sem mudanças.
-- bun run doctor: PASS sem bloqueios.
-- bun run verify: PASS.
-- bun run test:e2e: 4/4 PASS.
-- bun run openapi:check: PASS, 11 paths documentados.
-- bun run build: PASS para config, contracts, API e web.
-- artefato incidental supabase/.temp/cli-latest revertido.
+Centralizar set/clear do refresh cookie com Path=/api/v1/auth, adicionar regressões HTTP para logout/refresh inválido, executar verify/E2E e commitar o card 01.
