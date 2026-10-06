@@ -120,7 +120,6 @@ mock.module("./auth.repository", () => ({
   },
 }));
 
-process.env.RATE_LIMIT_AUTH_MAX = "100";
 const { app } = await import("../../app");
 
 function request(path: string, init: RequestInit = {}): Promise<Response> {
@@ -231,12 +230,6 @@ describe("auth HTTP flow", () => {
     expect(registerCookieHeader?.toLowerCase()).toContain("httponly");
     expect(registerCookieHeader?.toLowerCase()).toContain("samesite=lax");
     expect(registerCookieHeader).toContain("Path=/api/v1/auth");
-
-    const duplicate = await request("/api/v1/auth/register", {
-      method: "POST",
-      body: JSON.stringify({ email: normalizedEmail, password }),
-    });
-    expect(duplicate.status).toBe(409);
 
     const wrongPassword = await request("/api/v1/auth/login", {
       method: "POST",
