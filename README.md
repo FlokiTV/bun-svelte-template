@@ -6,12 +6,11 @@ Template enxuto para projetos construídos com forte uso de agentes/IA, sem acop
 
 ### Frontend
 - Svelte 5
-- SvelteKit
-- `adapter-static`
+- Rsbuild + Rspack
 - Tailwind CSS 4
 - TypeScript
 - Biome
-- Vitest + Svelte Testing Library
+- Rstest + Svelte Testing Library
 - Playwright
 - **Zero SSR**
 - **Mobile first**
@@ -67,7 +66,9 @@ Princípios:
 │   └── web/
 │       ├── src/
 │       │   ├── lib/
-│       │   └── routes/
+│       │   ├── App.svelte
+│       │   └── main.ts
+│       ├── rsbuild.config.ts
 │       └── static/
 │
 ├── packages/
@@ -170,18 +171,9 @@ gera arquivos estáticos em:
 apps/web/build/
 ```
 
-O `adapter-static` gera um fallback `200.html`. Em `static/_redirects` há uma regra compatível com hosts que entendem o formato de redirects para SPA.
+O Rsbuild usa Rspack em desenvolvimento e produção e gera o bundle em `apps/web/build/`. O script de build duplica `index.html` como `200.html`; `static/_redirects` mantém o fallback SPA em hosts compatíveis.
 
-Não crie:
-
-```text
-+page.server.ts
-+server.ts
-hooks.server.ts
-form actions
-```
-
-neste frontend.
+O frontend é estritamente client-only: não coloque handlers HTTP, acesso ao banco, secrets ou módulos Node-only em `apps/web`. Adicione um client router apenas quando o produto realmente precisar de múltiplas rotas.
 
 
 ## Autenticação JWT opcional
@@ -256,7 +248,6 @@ Generators:
 ```bash
 bun run gen:module billing
 bun run gen:component UserCard
-bun run gen:page settings/profile
 bun run gen:event notification.created
 ```
 

@@ -7,9 +7,9 @@
     "#lib/*": "./src/lib/*"
   },
   "scripts": {
-    "dev": "rsbuild dev --host 0.0.0.0",
+    "dev": "rsbuild dev --host 0.0.0.0 --port 5173 --strict-port",
     "build": "rsbuild build && bun scripts/create-spa-fallback.ts",
-    "preview": "rsbuild preview --host 0.0.0.0",
+    "preview": "rsbuild preview --host 0.0.0.0 --port 4173 --strict-port",
     "check": "bun ./node_modules/svelte-check/bin/svelte-check --tsconfig ./tsconfig.json",
     "test": "rstest run"
   },

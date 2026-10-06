@@ -40,7 +40,7 @@ CI runs `bun run audit:ci`, which blocks high and critical advisories.
 
 Lower-severity transitives are still reviewed explicitly. The current known exception is `esbuild@0.18.20` through Drizzle Kit's legacy loader chain (moderate severity). Drizzle Kit is a development/migration tool and is not part of the production API runtime bundle.
 
-The previous low-severity `cookie@0.6.0` advisory was removed by the SvelteKit 3 upgrade. Do not expose local development servers to untrusted networks. Reassess the remaining exception whenever Drizzle Kit or its transitive chain changes.
+The previous low-severity `cookie@0.6.0` advisory is no longer present in the dependency graph. Do not expose local development servers to untrusted networks. Reassess the remaining exception whenever Drizzle Kit or its transitive chain changes.
 
 ## Secrets
 Never commit production `.env` files, private keys, tokens or credentials. CI uses frozen dependencies and secret scanning, but reviewers must still inspect changes.

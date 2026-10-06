@@ -24,7 +24,6 @@
     "context": "bun scripts/context.ts",
     "architecture:check": "bun scripts/check-architecture.ts",
     "gen:component": "bun scripts/new-component.ts",
-    "gen:page": "bun scripts/new-page.ts",
     "gen:event": "bun scripts/new-event.ts",
     "openapi:check": "bun --filter '@vibe/api' openapi:check",
     "secrets:check": "bun scripts/secret-scan.ts",

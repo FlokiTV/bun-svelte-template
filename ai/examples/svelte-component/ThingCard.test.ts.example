@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/svelte";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "@rstest/core";
 import ThingCard from "./ThingCard.svelte";
 
 describe("ThingCard", () => {

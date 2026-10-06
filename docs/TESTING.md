@@ -16,7 +16,7 @@ Prioridades:
 ## Frontend
 
 Use:
-- Vitest para componentes/utilidades;
+- Rstest para componentes/utilidades, reutilizando a configuração Rsbuild/Rspack;
 - Svelte Testing Library para comportamento de UI;
 - Playwright para fluxos completos.
 

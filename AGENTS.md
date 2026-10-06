@@ -11,7 +11,7 @@ Read this file before changing code. Read `PROJECT.md` whenever a task changes p
 
 ## Core architecture
 
-- `apps/web`: Svelte 5 + SvelteKit in **static SPA mode**. No SSR. No backend code.
+- `apps/web`: Svelte 5 + Rsbuild/Rspack in **static SPA mode**. No SSR. No backend code.
 - `apps/api`: Bun + Elysia. All business rules and authorization belong here.
 - `packages/contracts`: framework-neutral public TypeScript contracts.
 - `packages/test-utils`: deterministic fixtures/helpers shared by tests only.
@@ -20,7 +20,7 @@ Read this file before changing code. Read `PROJECT.md` whenever a task changes p
 
 ## Non-negotiable rules
 
-1. Do not add SSR, server routes, `+page.server.*`, `+layout.server.*`, `+server.*`, or Svelte form actions.
+1. Do not add SSR, server-rendered frontend routes, backend handlers, or Node-only runtime code to `apps/web`.
 2. Do not make `apps/web` access PostgreSQL, secrets, Drizzle, API internals or Node-only modules.
 3. Do not put business rules or authorization in Svelte components.
 4. Every API input requires runtime validation at the transport boundary.
@@ -71,7 +71,7 @@ Use `bun run gen:module <name>` to create and register a baseline module.
 - Shared browser state: `src/lib/state` only when needed.
 - Pages orchestrate components; avoid giant page components.
 - Prefer native browser APIs and progressive enhancement.
-- Use `bun run gen:component Name` and `bun run gen:page route/path` when useful.
+- Use `bun run gen:component Name` when useful. Add a client router only when the product actually needs navigation.
 
 ## Error and observability contract
 

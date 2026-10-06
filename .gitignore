@@ -6,7 +6,6 @@ node_modules/
 # Builds
 build/
 dist/
-.svelte-kit/
 coverage/
 playwright-report/
 test-results/

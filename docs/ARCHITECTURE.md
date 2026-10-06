@@ -36,7 +36,7 @@ Não é responsabilidade do frontend:
 - acesso ao banco;
 - validação de segurança.
 
-O frontend é uma SPA estática construída por SvelteKit 3 com `ssr = false`. O `adapter-static` é configurado diretamente no plugin `sveltekit()` em `apps/web/vite.config.ts`, com fallback `200.html`; não existe servidor SvelteKit em produção.
+O frontend é uma SPA client-only construída com Svelte 5 e Rsbuild, usando Rspack em desenvolvimento e produção. `apps/web/rsbuild.config.ts` gera artefatos estáticos em `build/`; o build duplica `index.html` como `200.html` para fallback SPA e `static/_redirects` aponta rotas desconhecidas para esse fallback. Não existe runtime de frontend no servidor.
 
 ## apps/api
 
@@ -51,7 +51,7 @@ Responsabilidades:
 
 Cada feature deve ser um módulo explícito.
 
-Importações internas do frontend usam package imports (`#lib/*`) em vez de aliases legados do SvelteKit.
+Importações internas do frontend usam `#lib/*`, declarado no TypeScript e no Rsbuild/Rspack.
 
 ## packages/contracts
 

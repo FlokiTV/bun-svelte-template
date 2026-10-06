@@ -4,11 +4,13 @@
   "language": "typescript",
   "frontend": {
     "framework": "svelte-5",
-    "metaFramework": "sveltekit",
+    "metaFramework": null,
     "mode": "static-spa",
     "ssr": false,
     "styling": "tailwindcss",
-    "mobileFirst": true
+    "mobileFirst": true,
+    "buildTool": "rsbuild",
+    "bundler": "rspack"
   },
   "backend": {
     "framework": "elysia",
@@ -34,7 +36,7 @@
   "quality": {
     "formatterAndLinter": "biome",
     "apiTests": "bun:test",
-    "webTests": "vitest",
+    "webTests": "rstest",
     "e2e": "playwright",
     "completionCommand": "bun run verify"
   },

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Frontend toolchain
+- Frontend migrado de SvelteKit/Vite para Svelte 5 + Rsbuild/Rspack em SPA client-only.
+- Tailwind CSS 4 integrado pelo plugin oficial do Rsbuild.
+- Testes web migrados de Vitest para Rstest, reutilizando a configuração Rsbuild/Rspack.
+- Build continua gerando `build/index.html` e `build/200.html` para fallback de SPA.
+- Biome permanece como formatter/linter canônico.
+
 ## 1.0.0
 
 Primeira versão estável do template.

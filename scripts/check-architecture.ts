@@ -2,7 +2,8 @@ import { readdir, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 
 const root = join(import.meta.dir, "..");
-const webSrc = join(root, "apps", "web", "src");
+const webRoot = join(root, "apps", "web");
+const webSrc = join(webRoot, "src");
 const apiSrc = join(root, "apps", "api", "src");
 const forbiddenNames = [
   "+page.server.ts",
@@ -20,6 +21,8 @@ const forbiddenWebImports = [
   "from 'postgres'",
   "@vibe/api",
   "apps/api",
+  'from "node:',
+  "from 'node:",
 ];
 const sourceExtensions = [".ts", ".js", ".svelte"];
 const failures: string[] = [];
@@ -72,17 +75,52 @@ for (const file of await walk(apiSrc)) {
   }
 }
 
-const layout = await readFile(join(webSrc, "routes", "+layout.ts"), "utf8");
-if (!layout.includes("export const ssr = false")) {
-  failures.push("apps/web/src/routes/+layout.ts must export `ssr = false`");
+const rsbuildConfig = await readFile(join(webRoot, "rsbuild.config.ts"), "utf8");
+for (const requirement of [
+  ["@rsbuild/plugin-svelte", "apps/web must use @rsbuild/plugin-svelte"],
+  ["@rsbuild/plugin-tailwindcss", "apps/web must use @rsbuild/plugin-tailwindcss"],
+  ['root: "build"', 'apps/web Rsbuild output must use root: "build"'],
+  ['htmlFallback: "index"', 'apps/web Rsbuild dev server must use htmlFallback: "index"'],
+] as const) {
+  if (!rsbuildConfig.includes(requirement[0])) failures.push(requirement[1]);
 }
 
-const viteConfig = await readFile(join(root, "apps", "web", "vite.config.ts"), "utf8");
-if (!viteConfig.includes("@sveltejs/adapter-static")) {
-  failures.push("apps/web must use @sveltejs/adapter-static");
+const webPackage = JSON.parse(await readFile(join(webRoot, "package.json"), "utf8")) as {
+  scripts?: Record<string, string>;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+};
+const allWebDeps = { ...webPackage.dependencies, ...webPackage.devDependencies };
+for (const name of [
+  "@sveltejs/kit",
+  "@sveltejs/adapter-static",
+  "@sveltejs/vite-plugin-svelte",
+  "vite",
+  "vitest",
+]) {
+  if (name in allWebDeps) failures.push(`apps/web must not depend on ${name}`);
 }
-if (!viteConfig.includes('fallback: "200.html"')) {
-  failures.push('apps/web must configure adapter-static fallback: "200.html"');
+for (const name of [
+  "@rsbuild/core",
+  "@rsbuild/plugin-svelte",
+  "@rsbuild/plugin-tailwindcss",
+  "@rstest/core",
+]) {
+  if (!(name in allWebDeps)) failures.push(`apps/web must depend on ${name}`);
+}
+if (!webPackage.scripts?.dev?.startsWith("rsbuild dev")) {
+  failures.push("apps/web dev script must use rsbuild dev");
+}
+if (!webPackage.scripts?.build?.startsWith("rsbuild build")) {
+  failures.push("apps/web build script must use rsbuild build");
+}
+if (!webPackage.scripts?.test?.startsWith("rstest")) {
+  failures.push("apps/web test script must use rstest");
+}
+
+const redirects = await readFile(join(webRoot, "static", "_redirects"), "utf8");
+if (!redirects.includes("/* /200.html 200")) {
+  failures.push("apps/web static/_redirects must preserve the SPA 200.html fallback");
 }
 
 if (failures.length > 0) {

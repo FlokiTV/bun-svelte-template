@@ -8,7 +8,7 @@ This repository is optimized for small, independently understandable changes mad
 
 ## Decision
 
-Use Svelte 5/SvelteKit only as a static SPA/build target. SSR and Svelte server endpoints are not allowed.
+Use Svelte 5 as a client-only static SPA built with Rsbuild/Rspack. No frontend SSR or server endpoints are allowed.
 
 ## Consequences
 

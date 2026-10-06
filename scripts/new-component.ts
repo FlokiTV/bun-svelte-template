@@ -23,7 +23,7 @@ await Bun.write(
 await Bun.write(
   join(dir, `${name}.test.ts`),
   `import { render, screen } from "@testing-library/svelte";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "@rstest/core";
 import ${name} from "./${name}.svelte";
 
 describe("${name}", () => {

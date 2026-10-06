@@ -1,5 +1,5 @@
-import type { AuthSessionResponse } from "@vibe/contracts";
 import { afterEach, describe, expect, rs, test } from "@rstest/core";
+import type { AuthSessionResponse } from "@vibe/contracts";
 import { ApiError } from "../api/errors";
 import { authFetch, clearAccessToken, getAccessToken, login, logout, register } from "./client";
 

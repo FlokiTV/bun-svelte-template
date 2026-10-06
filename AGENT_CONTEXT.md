@@ -4,12 +4,12 @@
 - Pasta de trabalho: D:\DEV\bun-svelte-template
 
 ## Pedido atual do usuário
-Aplicar os achados da revisão final, sempre commitando e testando, deixando o follow-up pronto para push.
+Restaurar o modelo arquitetural pretendido desde o início: frontend Svelte 5 sobre Rsbuild/Rspack, preservando Biome, SPA estática e todos os gates.
 
 ## Board e card
-- Board: board_8b411807-cef3-420a-bfab-e89932cb0e44 — bun-svelte-template — Final review follow-up
-- Status: done
-- Card final: task_475ec8bb-3747-420a-95c6-7aeb8c3f0644 — 05 — Gates finais e handoff — done.
+- Board: board_5be0dd95-c8a7-45a4-ab34-b90610aaef5e — bun-svelte-template — Migrate web to Rspack
+- Status: active
+- Card atual: task_09865e83-3287-4f34-8ba7-48d0c760f986 — 03 — Guardrails e docs — in_progress.
 
 ## Estado de partida
 - main sincronizada com origin/main.
@@ -34,7 +34,7 @@ Aplicar os achados da revisão final, sempre commitando e testando, deixando o f
 Cada card termina com testes/gates relevantes verdes e commit próprio antes de avançar.
 
 ## Próximo passo exato
-Nenhum ajuste pendente. Follow-up publicado em origin/main e validado local/remotamente.
+Finalizar guardrails/docs Rspack, commitar card 03 e rodar gates completos/CI no card 04.
 
 ### Card 01 — refresh cookie deletion
 - set/clear centralizados em auth.cookie.ts.
@@ -218,3 +218,14 @@ Nenhum ajuste pendente. Follow-up publicado em origin/main e validado local/remo
 - push autorizado executado para origin/main.
 - CI 37522476396: PASS — quality, database (PostgreSQL 17 + migrations + test:db) e e2e.
 - validação local pós-push: frozen install PASS; doctor PASS; audit:ci PASS; verify PASS (32/32); E2E 4/4; drizzle-kit check PASS.
+
+
+## Migração para Rspack — 2026-10-06
+- decisão atual supersede a implementação SvelteKit/Vite descrita historicamente acima;
+- web agora é Svelte 5 client-only com Rsbuild 2.2.12 e Rspack subjacente;
+- @rsbuild/plugin-svelte 2.0.1 e @rsbuild/plugin-tailwindcss 2.0.3;
+- build gera build/index.html + build/200.html e preserva static/_redirects;
+- Vite, Vitest, SvelteKit e adapter-static removidos do grafo instalado do frontend;
+- testes web migrados para Rstest 0.12.3 + adapter-rsbuild; 13/13 PASS;
+- svelte-check: 0 erros / 0 warnings;
+- Biome 2.5.15 permanece formatter/linter canônico.

@@ -20,7 +20,7 @@ const requiredFiles = [
   "PROJECT.md",
   "ai/project.json",
   "docker-compose.yml",
-  "apps/web/vite.config.ts",
+  "apps/web/rsbuild.config.ts",
   "apps/api/src/app.ts",
 ];
 for (const path of requiredFiles) {
@@ -30,6 +30,9 @@ for (const path of requiredFiles) {
 const project = JSON.parse(await readFile(join(root, "ai", "project.json"), "utf8"));
 if (project.frontend?.ssr === false) ok("frontend SSR disabled in ai/project.json");
 else fail("ai/project.json must declare SSR=false");
+
+if (project.frontend?.bundler === "rspack") ok("frontend bundler is Rspack");
+else fail("ai/project.json must declare frontend bundler=rspack");
 
 if (existsSync(join(root, "node_modules"))) ok("dependencies installed");
 else warn("node_modules not found; run `bun install`");
