@@ -9,7 +9,7 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 ## Board e card
 - Board: board_0d8d387a-ee3a-41f9-9a3a-d7e25085d0a6 — bun-svelte-template — Security & production hardening v2
 - Status: active
-- Card atual: task_1aade41b-2ccc-4af1-9f77-1c8e2ceb4d3d — 06 — Adicionar durationMs à observabilidade HTTP — concluindo.
+- Card atual: task_3b8ab543-ac5a-4665-8a4d-a870f5f40a5a — 07 — CI com PostgreSQL real e migrations — aguardando CI remota.
 
 ## Estado de partida
 - main sincronizada com origin/main.
@@ -34,7 +34,7 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 Cada card termina com testes/gates relevantes verdes e commit próprio antes de avançar.
 
 ## Próximo passo exato
-Commitar e fechar o card 06; iniciar o card 07 com PostgreSQL 17 em CI, migrations do zero, db:check e fluxo auth real.
+Commitar/push do card 07, confirmar o job database em PostgreSQL 17 real e então iniciar supply-chain/audit do card 08.
 
 ### Card 01 — refresh cookie deletion
 - set/clear centralizados em auth.cookie.ts.
@@ -97,10 +97,14 @@ Commitar e fechar o card 06; iniciar o card 07 com PostgreSQL 17 em CI, migratio
 - bun run test:e2e: 4/4 PASS.
 
 
-### Card 06 — durationMs HTTP
-- timing monotônico armazenado por Request em WeakMap.
-- http.request.finished inclui requestId + durationMs.
-- logs de validation/request_failed reutilizam o mesmo contexto temporal.
-- testes de request timing/request ID: PASS.
+### Card 07 — CI PostgreSQL real
+- workflow ganhou job database com postgres:17-alpine e healthcheck.
+- job aplica todas as migrations do zero, executa db:check e test:db.
+- test:db usa app/repository reais e cobre register, /me, refresh rotation, replay family revocation, login, logout e refresh pós-logout.
+- teste DB incluído no typecheck, mas não no bun test padrão; roda explicitamente via test:db.
+- YAML parse: PASS (jobs database/e2e/quality).
+- drizzle-kit check: PASS.
+- API typecheck: PASS.
 - bun run verify: PASS.
 - bun run test:e2e: 4/4 PASS.
+- validação PostgreSQL 17 real será confirmada pelo GitHub Actions após o push deste commit.
