@@ -107,7 +107,9 @@ Commitar/push do card 07, confirmar o job database em PostgreSQL 17 real e entã
 - API typecheck: PASS.
 - bun run verify: PASS.
 - bun run test:e2e: 4/4 PASS.
-- validação PostgreSQL 17 real será confirmada pelo GitHub Actions após o push deste commit.
+- primeira CI PostgreSQL 17 falhou em 0000 porque PostgreSQL vanilla não possui roles Supabase anon/authenticated.
+- correção: db:migrate prepara anon/authenticated como NOLOGIN somente quando ausentes, sem editar migration aplicada.
+- verify/E2E após a correção: PASS; nova CI PostgreSQL 17 será exigida antes de fechar o card.
 
 
 ### Card 07 — PostgreSQL real
