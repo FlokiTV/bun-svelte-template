@@ -1,7 +1,6 @@
 import { ApiError, isApiErrorResponse } from "./errors";
 
-export async function requestJson<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
-  const response = await fetch(input, init);
+export async function readJsonResponse<T>(response: Response): Promise<T> {
   if (response.ok) return response.json() as Promise<T>;
 
   let payload: unknown;
@@ -26,4 +25,9 @@ export async function requestJson<T>(input: RequestInfo | URL, init?: RequestIni
     response.headers.get("x-request-id") ?? undefined,
     `Request failed with status ${response.status}`,
   );
+}
+
+export async function requestJson<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
+  const response = await fetch(input, init);
+  return readJsonResponse<T>(response);
 }

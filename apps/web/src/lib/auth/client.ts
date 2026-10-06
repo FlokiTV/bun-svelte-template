@@ -1,4 +1,5 @@
 import type { AuthMeResponse, AuthSessionResponse } from "@vibe/contracts";
+import { readJsonResponse } from "../api/request";
 
 const apiBaseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000/api/v1";
 
@@ -27,15 +28,6 @@ export function clearAccessToken(): void {
   accessToken = null;
 }
 
-async function readJson<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    const body = await response.json().catch(() => null);
-    const message = body?.error?.message ?? `Request failed with ${response.status}`;
-    throw new Error(message);
-  }
-  return response.json() as Promise<T>;
-}
-
 export async function register(email: string, password: string): Promise<AuthSessionResponse> {
   const response = await fetch(`${apiBaseUrl}/auth/register`, {
     method: "POST",
@@ -43,7 +35,7 @@ export async function register(email: string, password: string): Promise<AuthSes
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
-  const session = await readJson<AuthSessionResponse>(response);
+  const session = await readJsonResponse<AuthSessionResponse>(response);
   authGeneration += 1;
   signedOut = false;
   accessToken = session.accessToken;
@@ -57,7 +49,7 @@ export async function login(email: string, password: string): Promise<AuthSessio
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
-  const session = await readJson<AuthSessionResponse>(response);
+  const session = await readJsonResponse<AuthSessionResponse>(response);
   authGeneration += 1;
   signedOut = false;
   accessToken = session.accessToken;
@@ -76,7 +68,7 @@ export function refreshAccessToken(): Promise<AuthSessionResponse> {
       method: "POST",
       credentials: "include",
     });
-    const session = await readJson<AuthSessionResponse>(response);
+    const session = await readJsonResponse<AuthSessionResponse>(response);
 
     if (signedOut || authGeneration !== refreshGeneration) {
       throw new Error("Authentication state changed during refresh");
@@ -102,7 +94,7 @@ export async function logout(): Promise<void> {
       credentials: "include",
     });
     if (!response.ok) {
-      throw new Error(`Logout failed with ${response.status}`);
+      await readJsonResponse<never>(response);
     }
   } finally {
     clearAccessToken();
@@ -145,5 +137,5 @@ export async function getMe(): Promise<AuthMeResponse> {
   const response = await authFetch(`${apiBaseUrl}/auth/me`, {
     headers: { accept: "application/json" },
   });
-  return readJson<AuthMeResponse>(response);
+  return readJsonResponse<AuthMeResponse>(response);
 }

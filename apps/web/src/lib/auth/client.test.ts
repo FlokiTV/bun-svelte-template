@@ -1,5 +1,6 @@
 import type { AuthSessionResponse } from "@vibe/contracts";
 import { afterEach, describe, expect, test, vi } from "vitest";
+import { ApiError } from "../api/errors";
 import { authFetch, clearAccessToken, getAccessToken, login, logout } from "./client";
 
 const session: AuthSessionResponse = {
@@ -241,12 +242,33 @@ describe("logout auth state", () => {
           headers: { "content-type": "application/json" },
         }),
       )
-      .mockResolvedValueOnce(new Response(null, { status: 503 }));
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            error: {
+              code: "LOGOUT_UNAVAILABLE",
+              message: "Logout service unavailable",
+              requestId: "logout-request",
+            },
+          }),
+          {
+            status: 503,
+            headers: { "content-type": "application/json" },
+          },
+        ),
+      );
     vi.stubGlobal("fetch", fetchMock);
 
     await login("user@example.com", "password123");
 
-    await expect(logout()).rejects.toThrow("Logout failed with 503");
+    const logoutError = await logout().catch((error: unknown) => error);
+    expect(logoutError).toBeInstanceOf(ApiError);
+    expect(logoutError).toMatchObject({
+      status: 503,
+      code: "LOGOUT_UNAVAILABLE",
+      requestId: "logout-request",
+      message: "Logout service unavailable",
+    });
     expect(getAccessToken()).toBeNull();
 
     const [, init] = fetchMock.mock.calls[1] ?? [];
@@ -310,5 +332,61 @@ describe("logout auth state", () => {
     expect(response.status).toBe(401);
     expect(protectedCalls).toBe(1);
     expect(getAccessToken()).toBeNull();
+  });
+});
+
+describe("auth ApiError contract", () => {
+  test("preserves structured API errors from auth endpoints", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: {
+            code: "INVALID_CREDENTIALS",
+            message: "Invalid email or password",
+            requestId: "login-request",
+          },
+        }),
+        {
+          status: 401,
+          headers: { "content-type": "application/json" },
+        },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const error = await login("user@example.com", "wrong-password").catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({
+      status: 401,
+      code: "INVALID_CREDENTIALS",
+      requestId: "login-request",
+      message: "Invalid email or password",
+    });
+  });
+
+  test("falls back to HTTP_ERROR when the error body is not valid JSON", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response("upstream failure", {
+        status: 502,
+        headers: {
+          "content-type": "text/plain",
+          "x-request-id": "fallback-request",
+        },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const error = await login("user@example.com", "password123").catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({
+      status: 502,
+      code: "HTTP_ERROR",
+      requestId: "fallback-request",
+      message: "Request failed with status 502",
+    });
   });
 });

@@ -9,7 +9,7 @@ Executar todos os ajustes do board, sempre commitando as mudanças e testando tu
 ## Board e card
 - Board: board_4bc8a982-5a76-4ded-8544-6c66bcfcc27c — bun-svelte-template — Auth hardening & review follow-up
 - Status: active
-- Card atual: task_bf993b9a-e8de-4e87-b1c0-020252250c80 — 04 — Endurecer logout e ciclo de estado local — in_progress.
+- Card atual: task_0a4c5acd-2d55-4cbe-b89e-63cf819d5451 — 05 — Unificar erros de auth com o contrato ApiError — in_progress.
 
 ## Terminais gerenciados
 - Nenhum terminal ativo/relevante deste workspace nesta rodada.
@@ -40,7 +40,8 @@ Board criado com a seguinte ordem:
 - apps/api/package.json — peers/tipos explícitos para o linker isolado: @sinclair/typebox e bun-types.
 - bun.lock — importador da API atualizado; versões existentes preservadas.
 - apps/web/src/lib/auth/client.ts — authFetch falha fechado para origins diferentes da API configurada.
-- apps/web/src/lib/auth/client.test.ts — regressões para origin, refresh concorrente e falha sem retry loop.
+- apps/web/src/lib/auth/client.test.ts — regressões para origin, refresh, logout e ApiError.
+- apps/web/src/lib/api/request.ts — readJsonResponse compartilhado para preservar ApiError.
 
 ## Validações
 Card 01 — baseline determinístico:
@@ -54,6 +55,15 @@ Card 01 — baseline determinístico:
 
 Card 02 — trusted origin:
 - testes web: 5/5 PASS.
+- bun run verify: PASS.
+- bun run test:e2e: 2/2 PASS.
+
+Card 05 — ApiError compartilhado:
+- auth reutiliza readJsonResponse da camada HTTP; parsing duplicado removido.
+- erros padronizados preservam status/code/message/requestId.
+- corpo inválido cai em HTTP_ERROR com x-request-id.
+- authFetch continua decidindo refresh a partir do status 401 bruto.
+- testes web: 12/12 PASS.
 - bun run verify: PASS.
 - bun run test:e2e: 2/2 PASS.
 
@@ -78,4 +88,4 @@ Card 03 — refresh single-flight:
 - Nenhum bloqueio atual. Baseline reproduzível restaurado e gates verdes.
 
 ## Próximo passo exato
-Commitar e fechar o card 04; iniciar o card 05 para unificar erros de autenticação com ApiError sem perder o controle explícito do 401.
+Commitar e fechar o card 05; iniciar o card 06 para ampliar cobertura do auth, incluindo um E2E de cliente em browser sem exigir UI de login ou banco real.
