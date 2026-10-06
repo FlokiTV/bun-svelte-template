@@ -36,7 +36,7 @@ Não é responsabilidade do frontend:
 - acesso ao banco;
 - validação de segurança.
 
-O frontend é uma SPA estática construída por SvelteKit com `ssr = false`.
+O frontend é uma SPA estática construída por SvelteKit 3 com `ssr = false`. O `adapter-static` é configurado diretamente no plugin `sveltekit()` em `apps/web/vite.config.ts`, com fallback `200.html`; não existe servidor SvelteKit em produção.
 
 ## apps/api
 
@@ -50,6 +50,8 @@ Responsabilidades:
 - observabilidade.
 
 Cada feature deve ser um módulo explícito.
+
+Importações internas do frontend usam package imports (`#lib/*`) em vez de aliases legados do SvelteKit.
 
 ## packages/contracts
 
@@ -84,7 +86,7 @@ Evite JSON sem discriminador `type`.
 
 ## Optional JWT authentication
 
-The reusable auth module lives in `apps/api/src/modules/auth`. See `docs/AUTH.md`. Product-specific authorization remains outside this generic module.
+The reusable auth module lives in `apps/api/src/modules/auth`. Refresh sessions are persisted as rotation families so replay can revoke active descendants, while access tokens remain stateless and are scoped by issuer/audience. See `docs/AUTH.md`. Product-specific authorization remains outside this generic module.
 
 
 ## Operational boundaries

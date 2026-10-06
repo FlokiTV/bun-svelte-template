@@ -9,7 +9,7 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 ## Board e card
 - Board: board_0d8d387a-ee3a-41f9-9a3a-d7e25085d0a6 — bun-svelte-template — Security & production hardening v2
 - Status: active
-- Card atual: task_cf8b839a-eabf-42d1-87d9-dae16b074ec4 — 09 — Upgrade major deliberado do stack — aguardando CI remota.
+- Card atual: task_49745565-35e1-4cd6-86a6-8a921dcab86b — 10 — Documentação, gate final e push — in_progress.
 
 ## Estado de partida
 - main sincronizada com origin/main.
@@ -34,7 +34,7 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 Cada card termina com testes/gates relevantes verdes e commit próprio antes de avançar.
 
 ## Próximo passo exato
-Commitar/push do card 09, exigir CI Linux verde e então executar documentação/gates/push final do card 10.
+Commitar documentação/contexto final, push para origin/main e exigir a última CI remota verde antes de fechar o card e o board.
 
 ### Card 01 — refresh cookie deletion
 - set/clear centralizados em auth.cookie.ts.
@@ -146,4 +146,20 @@ Commitar/push do card 09, exigir CI Linux verde e então executar documentação
 - advisory cookie@0.6.0 foi eliminado pelo SvelteKit 3; resta apenas esbuild moderado na cadeia de tooling Drizzle.
 - TypeScript 7 adiado: SvelteKit 3.0.1 declara peer TypeScript ^6.0.0 e svelte-check 4.7.6 declara ^5 || ^6; manter TS 6.0.3 evita combinação oficialmente não suportada.
 - script web check passa a invocar svelte-check via Node com heap 4096 MB para evitar OOM intermitente no ambiente Windows.
-- verify/E2E locais completos ficaram impedidos nesta máquina por pagefile/heap do Windows, apesar de checks isolados passarem; CI Linux será o gate definitivo.
+- verify/E2E locais completos ficaram impedidos nesta máquina por pagefile/heap do Windows, apesar de checks isolados passarem; CI 37489072909 passou quality, database e e2e.
+
+
+### Card 10 — documentação e gates finais
+- docs/AUTH.md alinhado com session families/replay, pruning, JWT iss/aud, cookie Path e Origin enforcement.
+- docs/SECURITY.md alinhado com CORS validado, replay protection, JWT scoping, durationMs, WebSocket limits e advisory restante.
+- docs/OPERATIONS.md documenta migration compatibility roles, CI PostgreSQL 17, audit e limites WebSocket.
+- docs/ARCHITECTURE.md documenta SvelteKit 3, adapter-static no Vite, fallback 200.html e package imports #lib.
+- bun install --frozen-lockfile com Bun 1.4.2: PASS.
+- doctor: PASS sem bloqueios; avisos locais apenas .env/Docker/DB opcional ausentes.
+- audit:ci: PASS; somente 1 advisory abaixo do threshold.
+- architecture:check: PASS.
+- openapi:check: PASS, 11 paths.
+- drizzle-kit check: PASS.
+- lint: PASS.
+- build config/contracts/API/web: PASS.
+- verify/E2E finais serão executados pela CI Linux após o push final devido limitação de pagefile do Windows local.

@@ -9,13 +9,17 @@ The template ships with conservative defaults, not a complete security program.
 - browser auth helper restricted to the configured API origin before sending Bearer tokens or cookies;
 - single-flight refresh handling for rotated refresh sessions;
 - logout generation guard so an in-flight refresh cannot restore local auth state after logout;
-- configurable CORS allow-list;
+- validated CORS allow-list restricted to explicit `http`/`https` origins;
+- browser `Origin` enforcement on refresh/logout and WebSocket handshakes;
 - common security response headers;
 - Bun/Elysia request body size limit;
 - per-route rate-limit macro (`rateLimit: "default" | "auth"`);
-- request IDs and structured logging without secrets;
+- request IDs, monotonic `durationMs`, and structured logging without secrets;
 - outbound request timeout helper;
 - local secret scan executed by the completion gate and CI;
+- refresh-session family replay detection and periodic pruning;
+- JWT issuer/audience scoping;
+- process-local WebSocket connection/message limits;
 - graceful shutdown;
 - liveness and readiness endpoints.
 
@@ -33,12 +37,9 @@ Concurrent expired requests share one refresh operation because refresh sessions
 ## Dependency audit
 CI runs `bun run audit:ci`, which blocks high and critical advisories.
 
-Lower-severity transitives are still reviewed explicitly. Current known exceptions:
+Lower-severity transitives are still reviewed explicitly. The current known exception is `esbuild@0.18.20` through Drizzle Kit's legacy loader chain (moderate severity). Drizzle Kit is a development/migration tool and is not part of the production API runtime bundle.
 
-- `cookie@0.6.0` through SvelteKit 2: low severity. In this template SvelteKit is built as a static SPA with SSR disabled, so this package is not a production server runtime.
-- `esbuild@0.18.20` through Drizzle Kit's legacy loader chain: moderate severity. Drizzle Kit is a development/migration tool and is not part of the production API runtime bundle.
-
-Do not expose local development servers to untrusted networks. Reassess these exceptions whenever SvelteKit, Drizzle Kit, or their transitive chains change.
+The previous low-severity `cookie@0.6.0` advisory was removed by the SvelteKit 3 upgrade. Do not expose local development servers to untrusted networks. Reassess the remaining exception whenever Drizzle Kit or its transitive chain changes.
 
 ## Secrets
 Never commit production `.env` files, private keys, tokens or credentials. CI uses frozen dependencies and secret scanning, but reviewers must still inspect changes.

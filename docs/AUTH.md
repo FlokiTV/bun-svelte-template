@@ -9,6 +9,8 @@ The template includes an optional, self-hosted JWT authentication module under `
 - Access tokens are short-lived JWTs sent as `Authorization: Bearer <token>`.
 - Refresh tokens are longer-lived JWTs stored in an HttpOnly cookie.
 - Refresh sessions are persisted in PostgreSQL so logout and refresh-token rotation can revoke them.
+- Rotated refresh sessions belong to a session family. Replaying an already-rotated refresh token revokes active descendants in that family.
+- Expired session rows are pruned periodically; the interval is configurable through `AUTH_SESSION_PRUNE_INTERVAL_SECONDS`.
 - Access tokens remain stateless and are intentionally not checked against the database on every request.
 - Refresh tokens rotate on every successful refresh.
 - The browser helper keeps the access token in memory instead of localStorage.
@@ -39,7 +41,12 @@ Set a PostgreSQL connection and unique high-entropy secrets:
 DATABASE_URL=postgresql://...
 JWT_ACCESS_SECRET=replace-me
 JWT_REFRESH_SECRET=replace-me-too
+JWT_ISSUER=vibe-api:production
+JWT_ACCESS_AUDIENCE=vibe-api:web
+JWT_REFRESH_AUDIENCE=vibe-api:refresh
 ```
+
+`iss` and `aud` are embedded in both token types and validated when tokens are consumed. Keep issuer/audience values environment-specific when multiple services or deployments share infrastructure.
 
 Generate secrets with a cryptographically secure tool. Never commit real secrets.
 
@@ -48,7 +55,7 @@ Generate secrets with a cryptographically secure tool. Never commit real secrets
 ```text
 access token:  15 minutes
 refresh token: 30 days
-cookie:        HttpOnly, SameSite=Lax
+cookie:        HttpOnly, SameSite=Lax, Path=/api/v1/auth
 ```
 
 Production HTTPS should set `AUTH_COOKIE_SECURE=true`.
@@ -62,7 +69,7 @@ users
 auth_sessions
 ```
 
-Generate and apply a migration before using the endpoints:
+Generate and apply a migration before using the endpoints. `db:migrate` prepares the `anon` and `authenticated` NOLOGIN roles only when they are absent, preserving compatibility with both vanilla PostgreSQL and Supabase security migrations:
 
 ```bash
 bun --filter '@vibe/api' db:generate
@@ -87,8 +94,9 @@ It deliberately does not provide login screens or product-specific session UI.
 
 - Do not store the access token in localStorage in the provided pattern.
 - Keep authenticated browser calls scoped to the configured API origin; do not bypass `authFetch` with ad-hoc Bearer handling.
-- Keep refresh cookies HttpOnly.
-- Restrict CORS to known frontend origins.
+- Keep refresh cookies HttpOnly and scoped to `/api/v1/auth`.
+- Refresh/logout requests with a browser `Origin` header are accepted only when that origin is in the configured CORS allow-list; server-to-server requests without `Origin` remain supported.
+- Restrict CORS to known `http`/`https` origins. Wildcards and origin values containing a path/query/fragment are rejected at startup.
 - Use HTTPS in production.
 - Add rate limits to register/login/refresh before exposing the application publicly.
 - Add email verification, MFA, account suspension, password recovery, and audit controls as product requirements demand them; they are not silently assumed by this generic template.
