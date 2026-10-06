@@ -70,7 +70,7 @@ Repositories podem ser adicionados quando um módulo realmente precisar de persi
 
 ## Realtime
 
-O template expõe `/ws` como exemplo mínimo.
+O template expõe `/ws` como exemplo mínimo, não como infraestrutura de produto pronta. O endpoint reutiliza a allow-list de Origin do CORS e aplica limites process-local de conexões, tamanho de mensagem e mensagens por janela. Deploys multi-instância que precisem de limites globais devem usar coordenação compartilhada.
 
 Eventos reais devem ter protocolo explícito:
 

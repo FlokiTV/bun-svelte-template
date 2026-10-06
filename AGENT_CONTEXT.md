@@ -76,3 +76,13 @@ Commitar e fechar o card 04; iniciar hardening do WebSocket público no card 05.
 - testes focados auth/config: PASS.
 - bun run verify: PASS.
 - bun run test:e2e: 4/4 PASS.
+
+
+### Card 05 — WebSocket hardening
+- /ws reutiliza a allow-list de Origin.
+- limites process-local configuráveis: conexões, bytes por mensagem e mensagens por janela.
+- handshake real com Origin permitido: PASS; Origin malicioso: rejeitado.
+- testes unitários de limiter: PASS.
+- integração real WebSocket: PASS.
+- bun run verify: PASS.
+- bun run test:e2e: 4/4 PASS.
