@@ -161,12 +161,8 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
         );
       }
 
-      const nextSessionId = await rotateSession(
-        payload.sid,
-        payload.sub,
-        config.jwtRefreshTtlSeconds,
-      );
-      if (!nextSessionId) {
+      const rotation = await rotateSession(payload.sid, payload.sub, config.jwtRefreshTtlSeconds);
+      if (rotation.status !== "rotated") {
         clearRefreshCookie(refreshCookie);
         return status(
           401,
@@ -179,10 +175,10 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
       }
 
       const accessToken = await accessJwt.sign(
-        makeAccessPayload(user.id, nextSessionId, config.jwtAccessTtlSeconds),
+        makeAccessPayload(user.id, rotation.sessionId, config.jwtAccessTtlSeconds),
       );
       const refreshToken = await refreshJwt.sign(
-        makeRefreshPayload(user.id, nextSessionId, config.jwtRefreshTtlSeconds),
+        makeRefreshPayload(user.id, rotation.sessionId, config.jwtRefreshTtlSeconds),
       );
 
       setRefreshCookie(refreshCookie, refreshToken);

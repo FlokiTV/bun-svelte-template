@@ -9,7 +9,7 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 ## Board e card
 - Board: board_0d8d387a-ee3a-41f9-9a3a-d7e25085d0a6 — bun-svelte-template — Security & production hardening v2
 - Status: active
-- Card atual: task_4f3d414b-8ea2-4f2d-992e-b4c757e9215c — 02 — Validar CORS e adicionar proteção Origin/CSRF — concluindo.
+- Card atual: task_fc0ce73e-d4dc-4ea1-a78c-a8bf427c2a90 — 03 — Endurecer lifecycle e replay de auth_sessions — concluindo.
 
 ## Estado de partida
 - main sincronizada com origin/main.
@@ -34,7 +34,7 @@ Executar todos os ajustes da segunda revisão técnica, sempre commitando e test
 Cada card termina com testes/gates relevantes verdes e commit próprio antes de avançar.
 
 ## Próximo passo exato
-Commitar e fechar o card 02; iniciar lifecycle/replay de auth_sessions com migration incremental no card 03.
+Commitar e fechar o card 03; iniciar issuer/audience JWT no card 04.
 
 
 ### Card 01 — refresh cookie deletion
@@ -53,3 +53,16 @@ Commitar e fechar o card 02; iniciar lifecycle/replay de auth_sessions com migra
 - testes focados config + auth: PASS.
 - bun run verify: PASS.
 - bun run test:e2e: 4/4 PASS.
+
+
+### Card 03 — auth session lifecycle/replay
+- auth_sessions ganhou family_id, índice de family e índice expires_at.
+- migration 0002 faz backfill family_id=id antes de SET NOT NULL; migrations anteriores intactas.
+- replay de sessão já rotacionada revoga todos os descendentes ativos da família.
+- pruning remove somente sessões cujo expires_at já passou; rotina periódica configurável no runtime.
+- repository real validado contra PGlite: rotate/replay/prune PASS.
+- migration 0002 validada em PGlite com sessão preexistente.
+- drizzle generate: nenhuma mudança adicional; drizzle check: PASS.
+- auth integration test: PASS.
+- bun run verify: PASS.
+- E2E teve um primeiro flake por dev:web exit code 9; rerun isolado: 4/4 PASS.

@@ -15,10 +15,15 @@ export const authSessions = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    familyId: uuid("family_id").notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     refreshedAt: timestamp("refreshed_at", { withTimezone: true }),
   },
-  (table) => [index("auth_sessions_user_id_idx").on(table.userId)],
+  (table) => [
+    index("auth_sessions_user_id_idx").on(table.userId),
+    index("auth_sessions_family_id_idx").on(table.familyId),
+    index("auth_sessions_expires_at_idx").on(table.expiresAt),
+  ],
 );

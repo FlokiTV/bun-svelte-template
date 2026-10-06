@@ -154,6 +154,8 @@ export function loadApiConfig(source: EnvSource) {
     ),
     jwtAccessTtlSeconds: positiveInteger(source, "JWT_ACCESS_TTL_SECONDS", 15 * 60),
     jwtRefreshTtlSeconds: positiveInteger(source, "JWT_REFRESH_TTL_SECONDS", 30 * 24 * 60 * 60),
+    authSessionPruneIntervalMs:
+      positiveInteger(source, "AUTH_SESSION_PRUNE_INTERVAL_SECONDS", 6 * 60 * 60) * 1000,
     authCookieSecure,
     authCookieSameSite,
   });

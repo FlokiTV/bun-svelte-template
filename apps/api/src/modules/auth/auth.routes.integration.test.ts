@@ -11,6 +11,7 @@ type UserRecord = {
 type SessionRecord = {
   id: string;
   userId: string;
+  familyId: string;
   expiresAt: Date;
   revokedAt: Date | null;
   refreshedAt: Date | null;
@@ -45,7 +46,12 @@ mock.module("./auth.repository", () => ({
 
   findUserById: async (id: string): Promise<UserRecord | null> => usersById.get(id) ?? null,
 
-  createSession: async (input: { id: string; userId: string; expiresAt: Date }): Promise<void> => {
+  createSession: async (input: {
+    id: string;
+    userId: string;
+    familyId: string;
+    expiresAt: Date;
+  }): Promise<void> => {
     sessions.set(input.id, {
       ...input,
       revokedAt: null,
@@ -58,36 +64,57 @@ mock.module("./auth.repository", () => ({
     nextSessionId: string;
     userId: string;
     nextExpiresAt: Date;
-  }): Promise<boolean> => {
+  }): Promise<"rotated" | "replayed" | "invalid"> => {
     const current = sessions.get(input.currentSessionId);
     const now = new Date();
 
     if (
-      !current ||
-      current.userId !== input.userId ||
-      current.revokedAt !== null ||
-      current.expiresAt <= now
+      current &&
+      current.userId === input.userId &&
+      current.revokedAt === null &&
+      current.expiresAt > now
     ) {
-      return false;
+      current.revokedAt = now;
+      current.refreshedAt = now;
+
+      sessions.set(input.nextSessionId, {
+        id: input.nextSessionId,
+        userId: input.userId,
+        familyId: current.familyId,
+        expiresAt: input.nextExpiresAt,
+        revokedAt: null,
+        refreshedAt: null,
+      });
+
+      return "rotated";
     }
 
-    current.revokedAt = now;
-    current.refreshedAt = now;
+    if (current?.userId === input.userId && current.refreshedAt !== null) {
+      for (const session of sessions.values()) {
+        if (session.familyId === current.familyId && session.revokedAt === null) {
+          session.revokedAt = now;
+        }
+      }
+      return "replayed";
+    }
 
-    sessions.set(input.nextSessionId, {
-      id: input.nextSessionId,
-      userId: input.userId,
-      expiresAt: input.nextExpiresAt,
-      revokedAt: null,
-      refreshedAt: null,
-    });
-
-    return true;
+    return "invalid";
   },
 
   revokeSession: async (id: string): Promise<void> => {
     const session = sessions.get(id);
     if (session && session.revokedAt === null) session.revokedAt = new Date();
+  },
+
+  pruneExpiredSessions: async (before = new Date()): Promise<number> => {
+    let deleted = 0;
+    for (const [id, session] of sessions) {
+      if (session.expiresAt < before) {
+        sessions.delete(id);
+        deleted += 1;
+      }
+    }
+    return deleted;
   },
 }));
 
@@ -243,6 +270,11 @@ describe("auth HTTP flow", () => {
     const replayDeleteCookie = replayOldRefresh.headers.get("set-cookie");
     expect(replayDeleteCookie).toContain("Max-Age=0");
     expect(replayDeleteCookie).toContain("Path=/api/v1/auth");
+
+    const activeSessionsAfterReplay = [...sessions.values()].filter(
+      (session) => session.revokedAt === null,
+    );
+    expect(activeSessionsAfterReplay.length).toBe(1);
 
     const blockedLogout = await request("/api/v1/auth/logout", {
       method: "POST",

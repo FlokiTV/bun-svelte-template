@@ -15,6 +15,13 @@
       "when": 1791291307003,
       "tag": "0001_sturdy_bloodstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791295753355,
+      "tag": "0002_fair_cardiac",
+      "breakpoints": true
     }
   ]
 }

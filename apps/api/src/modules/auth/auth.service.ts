@@ -111,25 +111,32 @@ export async function createSessionForUser(
   await createSession({
     id: sessionId,
     userId,
+    familyId: sessionId,
     expiresAt: new Date(Date.now() + refreshTtlSeconds * 1000),
   });
   return sessionId;
 }
 
+export type RotateSessionResult =
+  | { status: "rotated"; sessionId: string }
+  | { status: "replayed" | "invalid" };
+
 export async function rotateSession(
   currentSessionId: string,
   userId: string,
   refreshTtlSeconds: number,
-): Promise<string | null> {
+): Promise<RotateSessionResult> {
   const nextSessionId = crypto.randomUUID();
-  const rotated = await rotateSessionRecord({
+  const result = await rotateSessionRecord({
     currentSessionId,
     nextSessionId,
     userId,
     nextExpiresAt: new Date(Date.now() + refreshTtlSeconds * 1000),
   });
 
-  return rotated ? nextSessionId : null;
+  return result === "rotated"
+    ? { status: "rotated", sessionId: nextSessionId }
+    : { status: result };
 }
 
 export async function getAuthUser(userId: string): Promise<AuthUser | null> {
