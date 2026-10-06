@@ -1,0 +1,7 @@
+import { t } from "elysia";
+
+export const CreateThingBody = t.Object({
+  name: t.String({ minLength: 1, maxLength: 120 }),
+});
+
+export type CreateThingInput = typeof CreateThingBody.static;

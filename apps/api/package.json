@@ -1,0 +1,33 @@
+{
+  "name": "@vibe/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "build": "bun build src/index.ts --target bun --outdir dist",
+    "check": "tsc --noEmit",
+    "test": "bun test",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:check": "bun scripts/check-db.ts",
+    "db:seed": "bun scripts/seed.ts",
+    "openapi:check": "bun scripts/check-openapi.ts"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "1.4.2",
+    "@elysiajs/openapi": "1.4.16",
+    "@vibe/contracts": "workspace:*",
+    "drizzle-orm": "0.45.3",
+    "elysia": "1.4.30",
+    "postgres": "3.4.9",
+    "@elysiajs/jwt": "1.4.2",
+    "@vibe/config": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.2",
+    "drizzle-kit": "0.31.11",
+    "typescript": "6.0.3",
+    "@vibe/test-utils": "workspace:*"
+  }
+}

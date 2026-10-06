@@ -1,0 +1,5 @@
+import type { CreateThingInput } from "./thing.model";
+
+export function createThing(input: CreateThingInput) {
+  return { id: crypto.randomUUID(), name: input.name };
+}

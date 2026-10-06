@@ -1,0 +1,12 @@
+import { Elysia } from "elysia";
+import { CreateThingBody } from "./thing.model";
+import { createThing } from "./thing.service";
+
+export const thingRoutes = new Elysia({ prefix: "/things" }).post(
+  "/",
+  ({ body }) => createThing(body),
+  {
+    body: CreateThingBody,
+    detail: { tags: ["Things"], summary: "Create a thing" },
+  },
+);

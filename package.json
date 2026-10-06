@@ -1,0 +1,46 @@
+{
+  "name": "bun-svelte-vibecode-template",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run --parallel --filter '@vibe/web' --filter '@vibe/api' dev",
+    "dev:web": "bun --filter '@vibe/web' dev",
+    "dev:api": "bun --filter '@vibe/api' dev",
+    "build": "bun --filter '@vibe/config' build && bun --filter '@vibe/contracts' build && bun --filter '@vibe/api' build && bun --filter '@vibe/web' build",
+    "check": "tsc -p tsconfig.tools.json --noEmit && bun --filter '@vibe/config' check && bun --filter '@vibe/contracts' check && bun --filter '@vibe/test-utils' check && bun --filter '@vibe/api' check && bun --filter '@vibe/web' check",
+    "test": "bun run --parallel --filter '@vibe/web' --filter '@vibe/api' test",
+    "test:e2e": "playwright test",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "ci": "bun run verify",
+    "gen:module": "bun scripts/new-module.ts",
+    "verify": "bun scripts/verify.ts",
+    "doctor": "bun scripts/doctor.ts",
+    "context": "bun scripts/context.ts",
+    "architecture:check": "bun scripts/check-architecture.ts",
+    "gen:component": "bun scripts/new-component.ts",
+    "gen:page": "bun scripts/new-page.ts",
+    "gen:event": "bun scripts/new-event.ts",
+    "openapi:check": "bun --filter '@vibe/api' openapi:check",
+    "secrets:check": "bun scripts/secret-scan.ts",
+    "db:up": "bun scripts/db-local.ts up",
+    "db:down": "bun scripts/db-local.ts down",
+    "db:reset": "bun scripts/db-local.ts reset",
+    "db:migrate": "bun --filter '@vibe/api' db:migrate",
+    "db:generate": "bun --filter '@vibe/api' db:generate",
+    "db:seed": "bun --filter '@vibe/api' db:seed"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "@playwright/test": "1.63.0",
+    "@types/bun": "1.4.2",
+    "typescript": "6.0.3"
+  },
+  "version": "1.0.0",
+  "packageManager": "bun@1.4.2"
+}

@@ -1,0 +1,55 @@
+{
+  "$schema": "./project.schema.json",
+  "runtime": "bun",
+  "language": "typescript",
+  "frontend": {
+    "framework": "svelte-5",
+    "metaFramework": "sveltekit",
+    "mode": "static-spa",
+    "ssr": false,
+    "styling": "tailwindcss",
+    "mobileFirst": true
+  },
+  "backend": {
+    "framework": "elysia",
+    "apiPrefix": "/api/v1",
+    "openapi": true,
+    "websocket": true,
+    "documentationUi": "scalar",
+    "health": "/health",
+    "readiness": "/ready",
+    "metadata": "/meta"
+  },
+  "database": {
+    "engine": "postgresql",
+    "orm": "drizzle",
+    "optionalUntilFeatureNeedsPersistence": true
+  },
+  "auth": {
+    "strategy": "jwt",
+    "optionalModule": true,
+    "accessTokenStorage": "memory",
+    "refreshTokenStorage": "httpOnly-cookie"
+  },
+  "quality": {
+    "formatterAndLinter": "biome",
+    "apiTests": "bun:test",
+    "webTests": "vitest",
+    "e2e": "playwright",
+    "completionCommand": "bun run verify"
+  },
+  "architecture": {
+    "frontendOwnsBusinessLogic": false,
+    "frontendMayAccessDatabase": false,
+    "apiOwnsAuthorization": true,
+    "webAndApiIndependentlyDeployable": true
+  },
+  "security": {
+    "centralizedConfig": true,
+    "requestBodyLimit": true,
+    "securityHeaders": true,
+    "rateLimit": "per-route-process-local-baseline",
+    "secretScan": true,
+    "trustedProxyHeadersDefault": false
+  }
+}
