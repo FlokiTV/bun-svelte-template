@@ -4,14 +4,28 @@
 - Pasta de trabalho: D:\DEV\bun-svelte-template
 
 ## Pedido atual do usuário
-Implementar fallback de exclusão mútua entre abas com IndexedDB para autenticação quando navegador não oferece Web Locks; criar regressões e validar/publicar. Não criar agendamentos (usuário cancelou automação anterior).
+"Vamos matar tudo": preparar fundação do template para lançamento SaaS sem inventar produto, provedor de cobrança, domínio ou credenciais. Implementar telas de acesso/área privada e referência de deploy/segurança/backup, testes e CI. Não executar deploy real nem criar agendamentos sem configuração concreta.
 
 ## Board e card
-- Board atual: board_faa0649d-e9dd-4914-b095-5d7882232d17 — IndexedDB auth cross-tab fallback (done; CI 41874711286 SUCCESS).
-- Card atual: task_17368146-8478-44a4-be85-7f8ca36139c8 (done, checklist 5/5).
+- Board atual: board_c4d6626e-b0c1-4caf-be14-6debb28a87c1 — SaaS launch readiness (active).
+- Card atual: task_9f6b8f54-40b5-4656-a130-a33064f8ac99 (in_progress).
+- Board anterior: board_faa0649d-e9dd-4914-b095-5d7882232d17 — IndexedDB auth cross-tab fallback (done; CI 41874711286 SUCCESS).
 - Board anterior: board_ed4e58d7-34ba-4d52-922b-dc4694e6dfc5 — DB isolation & auth races (done; CI 41870016977 SUCCESS).
 - Board de remediação undici: board_e94c8eca-d9d4-4cbc-b6b6-248243dadc98 (done).
 - Board histórico de migração Rspack: board_5be0dd95-c8a7-45a4-ab34-b90610aaef5e (done).
+
+## SaaS launch readiness — 2026-11-04
+- Pedido: "vamos matar tudo" após auditoria mostrar que repositório é template, não SaaS. Objetivo operacional: implementar somente fundação genérica sem inventar o produto nem fazer deploy real.
+- Board: board_c4d6626e-b0c1-4caf-be14-6debb28a87c1 (active). Card: task_9f6b8f54-40b5-4656-a130-a33064f8ac99 (in_progress).
+- Terminais gerenciados: nenhum iniciado nesta rodada.
+- Produto ainda não foi definido pelo usuário. PROJECT.md atualizado com lacunas explícitas; não afirmar SaaS pronto para clientes pagos.
+- UI implementada: AccountPortal.svelte em /account com login, cadastro em dev, restauração de sessão por cookie, logout, erros acessíveis e exibição de identidade da conta; landing inicial preservada.
+- Produção: AUTH_REGISTRATION_ENABLED default false em NODE_ENV=production, com opt-in explícito; frontend ocultará cadastro sem PUBLIC_REGISTRATION_ENABLED=true; backend é autoridade. JWT secrets rejeitam placeholders REPLACE_*; API URL same-origin em build prod.
+- Infra de referência: deploy/Dockerfile, Caddyfile, compose.yaml e start-api.ts com obrigatoriedade de NODE_ENV=production e DATABASE_URL; site HTTPS, API internalizada. Exemplo de env sem segredos reais, backup-postgres.sh e docs/LAUNCH.md de go-live, backup/restore, LGPD, identidade, pagamentos e suporte; nenhuma instalação no provedor foi executada.
+- CI: job container adiciona builds Docker web/api, validação Caddy, Compose e preflight fail-closed; ainda precisa validar execução real no GitHub.
+- Validações locais: bun run verify PASS Node24 (37 API, 13 web, lint, types, OpenAPI, builds), Playwright E2E 20/20 PASS mobile+desktop, audit:ci PASS zero high/critical, git diff --check PASS. Docker indisponível localmente.
+- Bloqueios de lançamento: produto/caso de uso/tenancy/permissões, fornecedor de email/recovery, provedor de pagamentos e planos, política LGPD/termos, DNS/hosting/PostgreSQL managed/backup restore e observabilidade precisam de decisões e credenciais reais.
+- Próximo passo exato: commit e push do scaffold; acompanhar CI quality/database/e2e/container; corrigir problemas de imagem, documentar status; não realizar deploy público sem produto e infraestrutura definidos. Nenhuma automação deve ser criada.
 
 ## Fallback IndexedDB para autenticação — 2026-11-04
 - Pedido atual: fallback multitab IndexedDB quando Web Locks API não está disponível, preservando Web Locks como primeira opção. Não criar automação (cancelada a pedido do usuário).

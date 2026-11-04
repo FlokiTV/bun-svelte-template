@@ -2,7 +2,9 @@ import type { AuthMeResponse, AuthSessionResponse } from "@vibe/contracts";
 import { readJsonResponse } from "../api/request";
 import { notifyRemoteLogout, subscribeRemoteLogout, withAuthCookieLock } from "./coordinator";
 
-const apiBaseUrl = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3000/api/v1";
+const apiBaseUrl =
+  import.meta.env.PUBLIC_API_URL ??
+  (import.meta.env.DEV ? "http://localhost:3000/api/v1" : "/api/v1");
 
 function trustedApiUrl(input: string | URL): URL {
   const browserOrigin = typeof window === "undefined" ? "http://localhost" : window.location.origin;

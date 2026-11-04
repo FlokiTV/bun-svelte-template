@@ -1,0 +1,15 @@
+**/node_modules
+**/.env
+**/.env.*
+**/build
+**/dist
+**/.git
+**/test-results
+**/playwright-report
+**/coverage
+**/*.log
+.git
+.github
+test-results
+playwright-report
+AGENT_CONTEXT.md

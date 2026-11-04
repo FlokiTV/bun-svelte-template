@@ -225,6 +225,12 @@ Antes de pedir mudanças a um agente:
 
 Veja `docs/AI_WORKFLOW.md`.
 
+## Pré-lançamento do SaaS
+
+O template oferece uma página de conta em `/account` com login, cadastro em desenvolvimento, restauração de sessão e logout. **O cadastro público é desativado por padrão em produção**, e a área da conta ainda não é um produto comercial. Para publicar com segurança, configure as funcionalidades do produto e passe pelo checklist de `docs/LAUNCH.md`.
+
+A pasta `deploy/` contém apenas uma referência de Docker/Caddy (API privada, frontend estático, TLS e banco externo), não um deploy automático. O CI testa os artefatos, mas não cria domínio, cobra clientes ou disponibiliza produção.
+
 ## Removendo o exemplo
 
 O módulo `example` existe apenas para mostrar o padrão esperado. Pode ser removido quando o primeiro módulo real for criado.

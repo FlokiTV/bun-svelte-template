@@ -1,5 +1,7 @@
 # Operations
 
+For a single-instance HTTPS reverse-proxy deployment reference and launch blockers, see `docs/LAUNCH.md` and `deploy/compose.yaml`. CI validates the images but **never** publishes to production. Production registration is disabled until explicitly enabled after identity lifecycle/abuse controls.
+
 ## Endpoints
 - `GET /health`: liveness; does not depend on PostgreSQL.
 - `GET /ready`: readiness; checks PostgreSQL when `DATABASE_URL` is configured.

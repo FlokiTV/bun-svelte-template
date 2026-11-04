@@ -48,6 +48,27 @@ describe("runtime config", () => {
     ).toThrow();
   });
 
+  test("closes public registration by default in production", () => {
+    const production = {
+      NODE_ENV: "production",
+      CORS_ORIGINS: "https://app.example",
+      JWT_ACCESS_SECRET: "a".repeat(48),
+      JWT_REFRESH_SECRET: "b".repeat(48),
+    };
+    expect(loadApiConfig(production).authRegistrationEnabled).toBe(false);
+    expect(
+      loadApiConfig({ ...production, AUTH_REGISTRATION_ENABLED: "true" }).authRegistrationEnabled,
+    ).toBe(true);
+    expect(() => loadApiConfig({ ...production, AUTH_REGISTRATION_ENABLED: "maybe" })).toThrow();
+    expect(() =>
+      loadApiConfig({
+        ...production,
+        JWT_ACCESS_SECRET: "REPLACE_WITH_UNIQUE_RANDOM_ACCESS_SECRET",
+      }),
+    ).toThrow();
+    expect(loadApiConfig({ NODE_ENV: "test" }).authRegistrationEnabled).toBe(true);
+  });
+
   test("rejects insecure SameSite=None cookies", () => {
     expect(() =>
       loadApiConfig({

@@ -97,7 +97,12 @@ function secretValue(
       if (value.length < 32) {
         throw new Error(`${name} must be at least 32 characters in production`);
       }
-      if (value === developmentFallback || value.toLowerCase().includes("change-me")) {
+      if (
+        value === developmentFallback ||
+        value.toLowerCase().includes("change-me") ||
+        value.toLowerCase().includes("replace_") ||
+        value.toLowerCase().includes("replace-")
+      ) {
         throw new Error(`${name} still contains a development placeholder`);
       }
     }
@@ -112,6 +117,11 @@ export function loadApiConfig(source: EnvSource) {
   const environment = environmentValue(source);
   const authCookieSecure = booleanValue(source, "AUTH_COOKIE_SECURE", environment === "production");
   const authCookieSameSite = sameSiteValue(source);
+  const authRegistrationEnabled = booleanValue(
+    source,
+    "AUTH_REGISTRATION_ENABLED",
+    environment !== "production",
+  );
   const appName = stringValue(source, "APP_NAME", "vibe-api");
 
   if (authCookieSameSite === "none" && !authCookieSecure) {
@@ -166,6 +176,7 @@ export function loadApiConfig(source: EnvSource) {
       positiveInteger(source, "AUTH_SESSION_PRUNE_INTERVAL_SECONDS", 6 * 60 * 60) * 1000,
     authCookieSecure,
     authCookieSameSite,
+    authRegistrationEnabled,
   });
 }
 

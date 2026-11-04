@@ -2,6 +2,7 @@ node_modules/
 .env
 .env.*
 !.env.example
+!deploy/.env.production.example
 
 # Builds
 build/
@@ -15,6 +16,8 @@ test-results/
 *.db
 *.sqlite
 *.sqlite3
+backups/
+*.dump
 
 # Editors / OS
 .DS_Store

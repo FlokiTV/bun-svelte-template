@@ -2,6 +2,10 @@
 
 The template ships with conservative defaults, not a complete security program.
 
+## Public signup gate
+
+`AUTH_REGISTRATION_ENABLED` defaults to `false` for production, and `true` only for development/test. Production frontend hides the registration action unless built with `PUBLIC_REGISTRATION_ENABLED=true`; the API gate remains authoritative. Do not enable either before verifying email, password recovery, abuse controls, and product-specific authorization.
+
 ## Included
 - validated startup configuration;
 - production JWT secret length checks;

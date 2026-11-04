@@ -27,6 +27,12 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
   .post(
     "/register",
     async ({ body, cookie, accessJwt, refreshJwt, request, status }) => {
+      if (!config.authRegistrationEnabled) {
+        return status(
+          403,
+          errorResponse(ERROR_CODES.FORBIDDEN, "Registration is closed", requestIdFor(request)),
+        );
+      }
       if (!requestOriginIsAllowed(request)) {
         return status(
           403,

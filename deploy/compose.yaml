@@ -1,0 +1,60 @@
+# Reference single-instance topology for an external managed PostgreSQL.
+# Do not deploy without replacing .env.production placeholders, setting up
+# managed backups and performing the go-live review in docs/LAUNCH.md.
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: api
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      API_HOST: 0.0.0.0
+      API_PORT: 3000
+    restart: unless-stopped
+    expose:
+      - "3000"
+    healthcheck:
+      test:
+        - CMD
+        - bun
+        - -e
+        - "const r=await fetch('http://127.0.0.1:3000/ready');process.exit(r.ok?0:1)"
+      interval: 30s
+      timeout: 8s
+      retries: 5
+      start_period: 30s
+    networks:
+      - private
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: web
+      args:
+        PUBLIC_REGISTRATION_ENABLED: ${PUBLIC_REGISTRATION_ENABLED:-false}
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?Set SITE_DOMAIN in deploy/.env.production}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - private
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  private:
