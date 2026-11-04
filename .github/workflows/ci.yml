@@ -83,6 +83,7 @@ jobs:
             echo 'Production API unexpectedly started without DATABASE_URL'
             exit 1
           fi
+          cat /tmp/api-preflight.log
           grep -q 'Production API container requires DATABASE_URL' /tmp/api-preflight.log
 
   e2e:
