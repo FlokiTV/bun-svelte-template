@@ -85,7 +85,7 @@ The client intentionally:
 - keeps the access token only in memory;
 - rejects authenticated requests whose URL origin differs from the configured API origin before attaching the Bearer token or cookies;
 - coalesces concurrent `401` responses into a single refresh request, then retries each original request at most once;
-- serializes cookie-mutating operations between tabs using browser Web Locks when supported; a BroadcastChannel/storage signal invalidates access tokens in other tabs on logout. Older browsers fall back to single-tab coordination and can still experience refresh replay under simultaneous tabs; the server always revokes the session family on logout;
+- serializes cookie-mutating operations across same-origin tabs using browser Web Locks when available, otherwise an IndexedDB `readwrite`-transaction lease with a unique owner, heartbeat renewal and expiration recovery if a tab crashes. It stores only lock metadata (never tokens). The fallback greatly reduces refresh replay on older browsers but, unlike native Web Locks, a tab suspended longer than the lease can lose ownership while its request remains in flight. If both Web Locks and IndexedDB are unavailable, auth mutations fail closed rather than refresh without cross-tab coordination; BroadcastChannel/storage signals invalidate access tokens in other tabs on logout;
 - clears local auth state immediately on logout and prevents an in-flight refresh from restoring a token after logout;
 - preserves the API error contract through `ApiError`, including HTTP status, stable error code, message, and request ID.
 

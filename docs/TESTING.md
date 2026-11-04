@@ -38,6 +38,8 @@ O Playwright tem projetos:
 
 O mobile não é teste secundário; é parte do gate de qualidade para interfaces críticas.
 
+As regressões de autenticação exercitam Web Locks nativo e a ausência deliberada dessa API, forçando o fallback IndexedDB em abas reais. Elas verificam serialização de refresh, corrida refresh/logout, retomada de lease expirada e falha segura quando ambas as APIs estão indisponíveis. Os projetos E2E usam dois workers para evitar instabilidade do carregamento dinâmico em paralelo no Rsbuild dev server.
+
 
 ## Gate completo
 

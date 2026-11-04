@@ -1,17 +1,20 @@
+import { withIndexedDbCookieLock } from "./indexeddb-lock";
+
 const COOKIE_LOCK = "vibe-auth-cookie";
 const LOGOUT_CHANNEL = "vibe-auth-state";
 const LOGOUT_STORAGE_KEY = "vibe-auth-logout";
 
 /**
- * The Web Locks API serializes cookie-mutating auth requests across same-origin tabs.
- * Older browsers fall back to local single-flight; server-side family revocation
- * still ensures a concurrent logout cannot leave a live refresh session.
+ * Web Locks serialize cookie mutations across tabs. IndexedDB supplies an
+ * atomic, expiring lease when Web Locks are unavailable; if both are blocked,
+ * fail closed rather than perform an uncoordinated refresh.
  */
 export async function withAuthCookieLock<T>(operation: () => Promise<T>): Promise<T> {
-  if (typeof navigator !== "undefined" && navigator.locks?.request) {
+  if (typeof window === "undefined") return operation();
+  if (navigator.locks?.request) {
     return navigator.locks.request(COOKIE_LOCK, { mode: "exclusive" }, operation);
   }
-  return operation();
+  return withIndexedDbCookieLock(operation);
 }
 
 let logoutChannel: BroadcastChannel | undefined;

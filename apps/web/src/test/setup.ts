@@ -8,4 +8,14 @@ Object.defineProperty(window, "BroadcastChannel", {
   value: undefined,
 });
 
+// jsdom has neither browser Web Locks nor IndexedDB. Stub the Web Locks entry
+// point for unit tests; real cross-tab exclusion and the IndexedDB fallback
+// are exercised with actual browser storage by Playwright.
+Object.defineProperty(window.navigator, "locks", {
+  configurable: true,
+  value: {
+    request: async (_name: string, _options: unknown, run: () => Promise<unknown>) => run(),
+  },
+});
+
 afterEach(() => cleanup());

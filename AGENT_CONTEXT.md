@@ -4,13 +4,26 @@
 - Pasta de trabalho: D:\DEV\bun-svelte-template
 
 ## Pedido atual do usuário
-Proteger o teste PostgreSQL contra execução destrutiva em banco não isolado; corrigir corridas refresh/logout entre sessões e múltiplas abas; criar regressões e validar.
+Implementar fallback de exclusão mútua entre abas com IndexedDB para autenticação quando navegador não oferece Web Locks; criar regressões e validar/publicar. Não criar agendamentos (usuário cancelou automação anterior).
 
 ## Board e card
-- Board atual: board_ed4e58d7-34ba-4d52-922b-dc4694e6dfc5 — DB isolation & auth races (done; CI 41870016977 SUCCESS).
-- Card final: task_f3e319fb-510a-411d-a5f3-db2fe0cc5dee (done, checklist 6/6).
+- Board atual: board_faa0649d-e9dd-4914-b095-5d7882232d17 — IndexedDB auth cross-tab fallback (active).
+- Card atual: task_17368146-8478-44a4-be85-7f8ca36139c8 (in_progress; implementar, testar e validar CI).
+- Board anterior: board_ed4e58d7-34ba-4d52-922b-dc4694e6dfc5 — DB isolation & auth races (done; CI 41870016977 SUCCESS).
 - Board de remediação undici: board_e94c8eca-d9d4-4cbc-b6b6-248243dadc98 (done).
 - Board histórico de migração Rspack: board_5be0dd95-c8a7-45a4-ab34-b90610aaef5e (done).
+
+## Fallback IndexedDB para autenticação — 2026-11-04
+- Pedido atual: fallback multitab IndexedDB quando Web Locks API não está disponível, preservando Web Locks como primeira opção. Não criar automação (cancelada a pedido do usuário).
+- Board: board_faa0649d-e9dd-4914-b095-5d7882232d17 (active); card: task_17368146-8478-44a4-be85-7f8ca36139c8 (in_progress).
+- Terminais gerenciados: nenhum iniciado para este trabalho.
+- Implementado: apps/web/src/lib/auth/indexeddb-lock.ts: reivindicação atômica por transaction readwrite com owner nonce, prazo de 30s, renovação a cada 3s e liberação condicional ao dono. Uma aba encerrada deixa lease que expira. Se nem Web Locks nem IndexedDB funcionarem, operações de cookie falham com erro em vez de solicitar refresh sem coordenação. Tokens nunca vão para IndexedDB/localStorage.
+- Integração: apps/web/src/lib/auth/coordinator.ts seleciona Web Locks se suportado, IndexedDB caso contrário; demais fluxos client.ts permanecem intactos. Teste jsdom usa simulação do mecanismo Web Locks, enquanto E2E executa lock IndexedDB real.
+- Testes: Playwright original expandido para os dois modos, incluindo refresh concorrente, refresh/logout, recuperação de lock de aba encerrada e armazenamento indisponível; 16/16 E2E PASS no desktop e mobile com workers=2. Primeira tentativa em 4 workers teve timeout intermitente de hook dev (15/16); configuração limitada a 2 workers e rerun 16/16 PASS.
+- Arquivos: indexeddb-lock.ts novo, coordinator.ts, src/test/setup.ts, tests/e2e/auth-client.spec.ts, playwright.config.ts, docs/AUTH.md, docs/TESTING.md, AGENT_CONTEXT.md.
+- Limitação: heartbeat via timer pode não rodar se aba for suspensa por mais tempo que o prazo da lease; a exclusão nativa Web Locks permanece superior. Backend protege sessão contra replay.
+- Validações finais: bun run verify PASS com Node 24.21.0 (36 API, 13 web, TypeScript/Svelte, OpenAPI, builds, Biome, arquitetura e secret scan); Playwright 16/16 PASS com workers=2 (desktop/mobile); bun run audit:ci PASS (0 high/critical), git diff --check PASS.
+- Próximo passo exato: commit/push em origin/main, confirmar CI quality/database/e2e verde e fechar board.
 
 ## Estado de partida
 - main sincronizada com origin/main.
