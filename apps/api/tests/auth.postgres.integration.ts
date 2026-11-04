@@ -5,6 +5,7 @@ const { databaseName } = requireIsolatedTestDatabase(Bun.env);
 const testEmail = `postgres-${crypto.randomUUID()}@example.com`;
 let isolatedDatabaseVerified = false;
 
+const { resetRateLimitBucketsForTests } = await import("../src/core/rate-limit");
 const { app } = await import("../src/app");
 const { closeDb, getSqlClient } = await import("../src/db/client");
 
@@ -143,6 +144,10 @@ describe("auth with real PostgreSQL", () => {
     });
     expect(refreshAfterLogout.status).toBe(401);
 
+    // Each independent security scenario gets a fresh limiter window.
+    // Only the test counter is reset; production rate limiting remains unchanged.
+    resetRateLimitBucketsForTests();
+
     // A stale cookie must still revoke a new descendant of the same family.
     const staleLogin = await request("/api/v1/auth/login", {
       method: "POST",
@@ -169,6 +174,10 @@ describe("auth with real PostgreSQL", () => {
       headers: { cookie: descendantCookie },
     });
     expect(descendantAfterLogout.status).toBe(401);
+
+    // Avoid a prior sequential scenario exhausting the auth budget before
+    // the concurrent requests can exercise PostgreSQL advisory locking.
+    resetRateLimitBucketsForTests();
 
     // Exercise the real transaction lock when refresh and logout race.
     const concurrentLogin = await request("/api/v1/auth/login", {
