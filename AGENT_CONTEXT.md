@@ -7,8 +7,8 @@
 Proteger o teste PostgreSQL contra execução destrutiva em banco não isolado; corrigir corridas refresh/logout entre sessões e múltiplas abas; criar regressões e validar.
 
 ## Board e card
-- Board atual: board_ed4e58d7-34ba-4d52-922b-dc4694e6dfc5 — DB isolation & auth races (publicação e validação PostgreSQL CI em andamento).
-- Card atual: task_f3e319fb-510a-411d-a5f3-db2fe0cc5dee (in_progress; publicar, validar PostgreSQL real via GitHub Actions).
+- Board atual: board_ed4e58d7-34ba-4d52-922b-dc4694e6dfc5 — DB isolation & auth races (done; CI 41870016977 SUCCESS).
+- Card final: task_f3e319fb-510a-411d-a5f3-db2fe0cc5dee (done, checklist 6/6).
 - Board de remediação undici: board_e94c8eca-d9d4-4cbc-b6b6-248243dadc98 (done).
 - Board histórico de migração Rspack: board_5be0dd95-c8a7-45a4-ab34-b90610aaef5e (done).
 
@@ -263,7 +263,7 @@ Alterações locais prontas para revisão/commit. Se publicar, conferir a CI rem
 
 ## Proteção DB test e corridas de autenticação — 2026-11-04
 - Pedido atual: implementar isolamento de testes PostgreSQL e corrigir corridas refresh/logout e multitab; criar regressões e validar tudo.
-- Board: board_ed4e58d7-34ba-4d52-922b-dc4694e6dfc5 (active, aguardando PostgreSQL real); card: task_f3e319fb-510a-411d-a5f3-db2fe0cc5dee (regressão PostgreSQL ainda não executada).
+- Board: board_ed4e58d7-34ba-4d52-922b-dc4694e6dfc5 (done); card: task_f3e319fb-510a-411d-a5f3-db2fe0cc5dee (done, 6/6).
 - Estado de partida: main com alterações pré-existentes em bun.lock, CI, README, docs/TESTING.md e AGENT_CONTEXT.md da remediação undici. Todas preservadas.
 - Terminais gerenciados: nenhum para esta tarefa.
 - Decisões: test:db agora exige NODE_ENV=test, TEST_DATABASE_URL explícita igual a DATABASE_URL e nome *_test, confirma current_database() e limpa somente usuário criado pelo teste; CI usa PostgreSQL 17 banco vibe_test. Removido TRUNCATE global.
@@ -273,8 +273,10 @@ Alterações locais prontas para revisão/commit. Se publicar, conferir a CI rem
 - Validações: bun run verify PASS com Node 24 temporário no PATH: 36 API, 13 web, TypeScript/Svelte, arquitetura, secret scan, Biome, OpenAPI e builds. Playwright 8/8 PASS desktop/mobile, incluindo duas regressões multitab. bun run audit:ci PASS, frozen install PASS, drizzle-kit check PASS, CI YAML PASS, git diff --check PASS. Execução deliberada de test:db sem TEST_DATABASE_URL falhou antes de acessar banco (fail-closed comprovado).
 - Publicação 1: commit c057aa2 enviado para origin/main; GitHub Actions run 41862200097 concluído em failure: quality PASS, e2e PASS, database FAIL por HTTP 429 (rate limit) no teste PostgreSQL concorrente em apps/api/tests/auth.postgres.integration.ts:200. O runner PostgreSQL 17 funcionou, mas a regressão de concorrência não chegou ao assert de revogação.
 - Correção atual autorizada ("continua"): resetar somente buckets de rate limit entre fases independentes do teste PostgreSQL, usando a seam resetRateLimitBucketsForTests já existente e import dinâmico somente APÓS o guard de database isolado. Não alterar limites de produção. Não criar automações; usuário cancelou a anterior.
-- Estado: alterações do teste e deste handoff ainda não commitadas; executar verify, E2E e novo push antes de afirmar resultado.
-- Próximo passo exato: verificar Biome/TypeScript/suite, commit e push em origin/main; acompanhar CI nova até job database confirmar PostgreSQL real.
+- Publicação 2: commit 151db4a enviado para origin/main, resetando contador apenas entre fases independentes do teste PostgreSQL. Workflow GitHub Actions https://github.com/FlokiTV/bun-svelte-template/actions/runs/41870016977 concluiu SUCCESS: quality PASS, database PostgreSQL 17 vibe_test PASS (1 teste, 23 assertions), e2e PASS. Corridas refresh/logout e replay foram exercitadas em PostgreSQL real.
+- Validação local após patch: bun run verify PASS (36 testes API, 13 web, lint, arquitetura, types, OpenAPI e builds); Playwright 8/8 PASS; Biome patch PASS; git diff --check PASS.
+- Estado final: alterações produtivas e de regressão publicadas, board/card concluídos. O usuário cancelou a automação anterior; não ativar nem criar novo monitoramento.
+- Próximo passo exato: nenhum para as etapas 1 e 2; se necessário, apenas revisar os commits e a CI já verde.
 
 ## Correção de advisories undici — 2026-11-04
 - Pedido atual: corrigir quatro advisories high de undici transitivo de jsdom, manter compatibilidade e executar auditoria e todos os testes.
