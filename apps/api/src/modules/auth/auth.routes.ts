@@ -8,7 +8,7 @@ import { requestIdFor } from "../../core/request-id";
 import { clearRefreshCookie, setRefreshCookie } from "./auth.cookie";
 import { authGuard } from "./auth.guard";
 import { AuthCredentialsBody, AuthMeResponseSchema, AuthSessionResponseSchema } from "./auth.model";
-import { findUserById, revokeSession } from "./auth.repository";
+import { findUserById, revokeSessionFamilyBySessionId } from "./auth.repository";
 import {
   authenticateUser,
   createSessionForUser,
@@ -283,7 +283,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
           audience: config.jwtRefreshAudience,
         });
         if (isRefreshPayload(payload, config.jwtIssuer, config.jwtRefreshAudience)) {
-          await revokeSession(payload.sid);
+          await revokeSessionFamilyBySessionId(payload.sid, payload.sub);
         }
       }
 

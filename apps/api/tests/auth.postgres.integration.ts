@@ -1,8 +1,9 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { requireIsolatedTestDatabase } from "./test-db-safety";
 
-if (!Bun.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL is required for the PostgreSQL integration test");
-}
+const { databaseName } = requireIsolatedTestDatabase(Bun.env);
+const testEmail = `postgres-${crypto.randomUUID()}@example.com`;
+let isolatedDatabaseVerified = false;
 
 const { app } = await import("../src/app");
 const { closeDb, getSqlClient } = await import("../src/db/client");
@@ -27,17 +28,27 @@ function cookiePair(setCookie: string | null): string {
 }
 
 beforeAll(async () => {
-  await sql`truncate table auth_sessions, users restart identity cascade`;
+  const [actual] = await sql<Array<{ name: string }>>`select current_database() as name`;
+  if (actual?.name !== databaseName) {
+    throw new Error("Connected PostgreSQL database does not match TEST_DATABASE_URL");
+  }
+  isolatedDatabaseVerified = true;
 });
 
 afterAll(async () => {
-  await sql`truncate table auth_sessions, users restart identity cascade`;
-  await closeDb();
+  try {
+    // Never truncate shared tables: remove only the user created by this test.
+    if (isolatedDatabaseVerified) {
+      await sql`delete from users where email = ${testEmail}`;
+    }
+  } finally {
+    await closeDb();
+  }
 });
 
 describe("auth with real PostgreSQL", () => {
   test("migrations and repository support rotation, replay revocation, and logout", async () => {
-    const email = `postgres-${crypto.randomUUID()}@example.com`;
+    const email = testEmail;
     const password = "correct-horse-battery-staple";
 
     const register = await request("/api/v1/auth/register", {
@@ -131,5 +142,78 @@ describe("auth with real PostgreSQL", () => {
       },
     });
     expect(refreshAfterLogout.status).toBe(401);
+
+    // A stale cookie must still revoke a new descendant of the same family.
+    const staleLogin = await request("/api/v1/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+    expect(staleLogin.status).toBe(200);
+    const staleCookie = cookiePair(staleLogin.headers.get("set-cookie"));
+
+    const staleRefresh = await request("/api/v1/auth/refresh", {
+      method: "POST",
+      headers: { cookie: staleCookie },
+    });
+    expect(staleRefresh.status).toBe(200);
+    const descendantCookie = cookiePair(staleRefresh.headers.get("set-cookie"));
+
+    const staleLogout = await request("/api/v1/auth/logout", {
+      method: "POST",
+      headers: { cookie: staleCookie },
+    });
+    expect(staleLogout.status).toBe(200);
+
+    const descendantAfterLogout = await request("/api/v1/auth/refresh", {
+      method: "POST",
+      headers: { cookie: descendantCookie },
+    });
+    expect(descendantAfterLogout.status).toBe(401);
+
+    // Exercise the real transaction lock when refresh and logout race.
+    const concurrentLogin = await request("/api/v1/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+    expect(concurrentLogin.status).toBe(200);
+    const concurrentCookie = cookiePair(concurrentLogin.headers.get("set-cookie"));
+
+    const [family] = await sql<Array<{ family_id: string }>>`
+      select family_id
+      from auth_sessions
+      where user_id = ${registered.user.id} and revoked_at is null
+      order by created_at desc
+      limit 1
+    `;
+    if (!family) throw new Error("Expected a fresh session family for the race");
+
+    const [concurrentRefresh, concurrentLogout] = await Promise.all([
+      request("/api/v1/auth/refresh", {
+        method: "POST",
+        headers: { cookie: concurrentCookie },
+      }),
+      request("/api/v1/auth/logout", {
+        method: "POST",
+        headers: { cookie: concurrentCookie },
+      }),
+    ]);
+    expect([200, 401]).toContain(concurrentRefresh.status);
+    expect(concurrentLogout.status).toBe(200);
+
+    const [activeInFamily] = await sql<Array<{ count: number }>>`
+      select count(*)::int as count
+      from auth_sessions
+      where family_id = ${family.family_id} and revoked_at is null
+    `;
+    expect(activeInFamily?.count).toBe(0);
+
+    if (concurrentRefresh.status === 200) {
+      const lateCookie = cookiePair(concurrentRefresh.headers.get("set-cookie"));
+      const lateRefresh = await request("/api/v1/auth/refresh", {
+        method: "POST",
+        headers: { cookie: lateCookie },
+      });
+      expect(lateRefresh.status).toBe(401);
+    }
   });
 });

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, mock, test } from "bun:test";
+import { resetRateLimitBucketsForTests } from "../../core/rate-limit";
 
 type UserRecord = {
   id: string;
@@ -103,9 +104,14 @@ mock.module("./auth.repository", () => ({
     return "invalid";
   },
 
-  revokeSession: async (id: string): Promise<void> => {
+  revokeSessionFamilyBySessionId: async (id: string, userId: string): Promise<void> => {
     const session = sessions.get(id);
-    if (session && session.revokedAt === null) session.revokedAt = new Date();
+    if (!session || session.userId !== userId) return;
+    for (const member of sessions.values()) {
+      if (member.familyId === session.familyId && member.userId === userId) {
+        member.revokedAt ??= new Date();
+      }
+    }
   },
 
   pruneExpiredSessions: async (before = new Date()): Promise<number> => {
@@ -142,10 +148,43 @@ beforeEach(() => {
   usersById.clear();
   userIdByEmail.clear();
   sessions.clear();
+  resetRateLimitBucketsForTests();
   failFindUserByEmail = false;
 });
 
 describe("auth HTTP flow", () => {
+  test("logout using a rotated token revokes the active descendant", async () => {
+    const register = await request("/api/v1/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        email: "rotated-logout@example.com",
+        password: "correct-horse-battery-staple",
+      }),
+    });
+    expect(register.status).toBe(200);
+    const originalCookie = cookiePair(register.headers.get("set-cookie") ?? "");
+
+    const refresh = await request("/api/v1/auth/refresh", {
+      method: "POST",
+      headers: { cookie: originalCookie },
+    });
+    expect(refresh.status).toBe(200);
+    const descendantCookie = cookiePair(refresh.headers.get("set-cookie") ?? "");
+
+    const logout = await request("/api/v1/auth/logout", {
+      method: "POST",
+      headers: { cookie: originalCookie },
+    });
+    expect(logout.status).toBe(200);
+    expect([...sessions.values()].filter((session) => session.revokedAt === null)).toHaveLength(0);
+
+    const descendant = await request("/api/v1/auth/refresh", {
+      method: "POST",
+      headers: { cookie: descendantCookie },
+    });
+    expect(descendant.status).toBe(401);
+  });
+
   test("sanitizes unexpected errors from mounted auth routes", async () => {
     failFindUserByEmail = true;
 

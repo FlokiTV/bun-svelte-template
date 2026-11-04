@@ -1,15 +1,16 @@
 # Agent Context
 
-- Última atualização: 2026-10-06
+- Última atualização: 2026-11-04
 - Pasta de trabalho: D:\DEV\bun-svelte-template
 
 ## Pedido atual do usuário
-Restaurar o modelo arquitetural pretendido desde o início: frontend Svelte 5 sobre Rsbuild/Rspack, preservando Biome, SPA estática e todos os gates.
+Proteger o teste PostgreSQL contra execução destrutiva em banco não isolado; corrigir corridas refresh/logout entre sessões e múltiplas abas; criar regressões e validar.
 
 ## Board e card
-- Board: board_5be0dd95-c8a7-45a4-ab34-b90610aaef5e — bun-svelte-template — Migrate web to Rspack
-- Status: done
-- Card final: task_40c46c36-f1bb-4bf0-90c3-9fa46f5e18ec — 04 — Gates, audit e push — done.
+- Board atual: board_ed4e58d7-34ba-4d52-922b-dc4694e6dfc5 — DB isolation & auth races (publicação e validação PostgreSQL CI em andamento).
+- Card atual: task_f3e319fb-510a-411d-a5f3-db2fe0cc5dee (in_progress; publicar, validar PostgreSQL real via GitHub Actions).
+- Board de remediação undici: board_e94c8eca-d9d4-4cbc-b6b6-248243dadc98 (done).
+- Board histórico de migração Rspack: board_5be0dd95-c8a7-45a4-ab34-b90610aaef5e (done).
 
 ## Estado de partida
 - main sincronizada com origin/main.
@@ -34,7 +35,7 @@ Restaurar o modelo arquitetural pretendido desde o início: frontend Svelte 5 so
 Cada card termina com testes/gates relevantes verdes e commit próprio antes de avançar.
 
 ## Próximo passo exato
-Nenhum ajuste pendente nesta migração. Frontend Rspack publicado e validado.
+Alterações locais prontas para revisão/commit. Se publicar, conferir a CI remota com Node 24.21.0, PostgreSQL 17 e todos os gates. Nesta máquina, PostgreSQL real não estava disponível, portanto test:db não foi executado.
 
 ### Card 01 — refresh cookie deletion
 - set/clear centralizados em auth.cookie.ts.
@@ -259,3 +260,29 @@ Nenhum ajuste pendente nesta migração. Frontend Rspack publicado e validado.
 - database: PostgreSQL 17 + frozen install + migrations + db:check + test:db PASS.
 - e2e: Playwright no Rsbuild dev server PASS.
 - main sincronizada com origin/main após a publicação técnica.
+
+## Proteção DB test e corridas de autenticação — 2026-11-04
+- Pedido atual: implementar isolamento de testes PostgreSQL e corrigir corridas refresh/logout e multitab; criar regressões e validar tudo.
+- Board: board_ed4e58d7-34ba-4d52-922b-dc4694e6dfc5 (active, aguardando PostgreSQL real); card: task_f3e319fb-510a-411d-a5f3-db2fe0cc5dee (regressão PostgreSQL ainda não executada).
+- Estado de partida: main com alterações pré-existentes em bun.lock, CI, README, docs/TESTING.md e AGENT_CONTEXT.md da remediação undici. Todas preservadas.
+- Terminais gerenciados: nenhum para esta tarefa.
+- Decisões: test:db agora exige NODE_ENV=test, TEST_DATABASE_URL explícita igual a DATABASE_URL e nome *_test, confirma current_database() e limpa somente usuário criado pelo teste; CI usa PostgreSQL 17 banco vibe_test. Removido TRUNCATE global.
+- Concorrência backend: refresh/replay/logout adquirem mesmo pg_advisory_xact_lock transacional derivado de familyId. Logout de cookie antigo revoga a família inteira, inclusive descendentes recém rotacionados.
+- Concorrência frontend: Web Locks serializam operações de cookie entre abas do mesmo origin; logout sinalizado por BroadcastChannel e storage para invalidar access token das demais abas. Fallback sem Web Locks preserva single-flight local, sem garantia de serialização cross-tab em navegadores antigos.
+- Arquivos desta tarefa: apps/api/tests/test-db-safety.ts e .test.ts, auth.postgres.integration.ts, auth.repository.ts, auth.routes.ts, auth.routes.integration.test.ts, core/rate-limit.ts (reset para testes), apps/web/src/lib/auth/coordinator.ts, client.ts, src/test/setup.ts, tests/e2e/auth-client.spec.ts, CI, docs/AUTH.md, TESTING.md, OPERATIONS.md e este AGENT_CONTEXT.md.
+- Validações: bun run verify PASS com Node 24 temporário no PATH: 36 API, 13 web, TypeScript/Svelte, arquitetura, secret scan, Biome, OpenAPI e builds. Playwright 8/8 PASS desktop/mobile, incluindo duas regressões multitab. bun run audit:ci PASS, frozen install PASS, drizzle-kit check PASS, CI YAML PASS, git diff --check PASS. Execução deliberada de test:db sem TEST_DATABASE_URL falhou antes de acessar banco (fail-closed comprovado).
+- Bloqueio anterior: Docker/PostgreSQL não disponíveis localmente; autorizado em 2026-11-04 a publicar branch main para executar job database com PostgreSQL 17 isolado na CI. Execução remota ainda pendente.
+- Git: alterações locais não commitadas; nenhum push.
+- Próximo passo exato: registrar commit e push para origin/main, observar jobs quality/database/e2e; corrigir regressões caso existam, fechar board quando CI estiver verde.
+
+## Correção de advisories undici — 2026-11-04
+- Pedido atual: corrigir quatro advisories high de undici transitivo de jsdom, manter compatibilidade e executar auditoria e todos os testes.
+- Board: board_e94c8eca-d9d4-4cbc-b6b6-248243dadc98 (done).
+- Card: task_088f1b56-26fc-48fd-b9a6-08afde1d6cfb (done, checklist 5/5).
+- Terminais gerenciados: nenhum iniciado para esta tarefa.
+- Estado: git inicialmente limpo; jsdom@30.1.2 exigia undici@^8.11.2 e lock continha 8.11.2. Atualizado para undici@8.12.2, sem alterar dependências diretas nem mudar a arquitetura. Bun local 1.4.0, projeto/CI Bun 1.4.2.
+- Compatibilidade: Rstest usa Node pelo shebang. Node local 22.12.0 fica abaixo de jsdom 30 (mínimo 22.22.2) e não expõe createZstdDecompress; testes falharam ao carregar sem Node atualizado. Testes passaram em Node 24.21.0 temporário, sem trocar instalação global. CI quality/e2e agora fixam Node 24.21.0 via setup-node v6.3.0 pinado.
+- Arquivos alterados: bun.lock, .github/workflows/ci.yml, README.md, docs/TESTING.md, AGENT_CONTEXT.md. Sem commit e sem push.
+- Validações: audit:ci PASS, zero high/critical em 230 pacotes; bun audit completo registra só 1 moderate preexistente de esbuild 0.18.20 via drizzle-kit. bun install --frozen-lockfile PASS. bun run verify PASS com Node 24.21.0 no PATH: 32 API + 13 web, lint, types, OpenAPI 11 rotas, builds. test:e2e 4/4 PASS (desktop/mobile). doctor PASS com avisos Docker/.env. YAML CI parse PASS e git diff --check PASS.
+- Bloqueios: ausência de Docker/.env/DATABASE_URL e banco de testes descartável impediu a execução segura de apps/api test:db local; job CI PostgreSQL 17 existe, mas nova execução remota não foi disparada.
+- Próximo passo exato: revisar diff, commit/push quando autorizado e observar jobs quality/database/e2e na CI.

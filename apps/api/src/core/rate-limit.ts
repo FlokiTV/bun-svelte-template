@@ -14,6 +14,11 @@ type Bucket = {
 const buckets = new Map<string, Bucket>();
 const MAX_BUCKETS = 10_000;
 
+/** Reset the process-local store between isolated API integration tests. */
+export function resetRateLimitBucketsForTests(): void {
+  buckets.clear();
+}
+
 function clientKey(
   request: Request,
   server: {

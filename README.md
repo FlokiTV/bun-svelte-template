@@ -91,7 +91,7 @@ Princípios:
 
 ## Começando
 
-Requer Bun instalado.
+Requer Bun 1.4.2. Os testes do frontend (Rstest/jsdom) também exigem Node.js compatível: use Node 24.21.0 (versão fixada na CI). O Node é usado pelo runner de testes, não pela API Bun nem pelo bundle Svelte.
 
 ```bash
 bun install

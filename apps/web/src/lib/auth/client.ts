@@ -1,5 +1,6 @@
 import type { AuthMeResponse, AuthSessionResponse } from "@vibe/contracts";
 import { readJsonResponse } from "../api/request";
+import { notifyRemoteLogout, subscribeRemoteLogout, withAuthCookieLock } from "./coordinator";
 
 const apiBaseUrl = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3000/api/v1";
 
@@ -20,6 +21,12 @@ let refreshPromise: Promise<AuthSessionResponse> | null = null;
 let authGeneration = 0;
 let signedOut = false;
 
+subscribeRemoteLogout(() => {
+  authGeneration += 1;
+  signedOut = true;
+  accessToken = null;
+});
+
 export function getAccessToken(): string | null {
   return accessToken;
 }
@@ -29,31 +36,35 @@ export function clearAccessToken(): void {
 }
 
 export async function register(email: string, password: string): Promise<AuthSessionResponse> {
-  const response = await fetch(`${apiBaseUrl}/auth/register`, {
-    method: "POST",
-    credentials: "include",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ email, password }),
+  return withAuthCookieLock(async () => {
+    const response = await fetch(`${apiBaseUrl}/auth/register`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const session = await readJsonResponse<AuthSessionResponse>(response);
+    authGeneration += 1;
+    signedOut = false;
+    accessToken = session.accessToken;
+    return session;
   });
-  const session = await readJsonResponse<AuthSessionResponse>(response);
-  authGeneration += 1;
-  signedOut = false;
-  accessToken = session.accessToken;
-  return session;
 }
 
 export async function login(email: string, password: string): Promise<AuthSessionResponse> {
-  const response = await fetch(`${apiBaseUrl}/auth/login`, {
-    method: "POST",
-    credentials: "include",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ email, password }),
+  return withAuthCookieLock(async () => {
+    const response = await fetch(`${apiBaseUrl}/auth/login`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const session = await readJsonResponse<AuthSessionResponse>(response);
+    authGeneration += 1;
+    signedOut = false;
+    accessToken = session.accessToken;
+    return session;
   });
-  const session = await readJsonResponse<AuthSessionResponse>(response);
-  authGeneration += 1;
-  signedOut = false;
-  accessToken = session.accessToken;
-  return session;
 }
 
 export function refreshAccessToken(): Promise<AuthSessionResponse> {
@@ -63,7 +74,11 @@ export function refreshAccessToken(): Promise<AuthSessionResponse> {
   if (refreshPromise) return refreshPromise;
 
   const refreshGeneration = authGeneration;
-  refreshPromise = (async () => {
+  refreshPromise = withAuthCookieLock(async () => {
+    if (signedOut || authGeneration !== refreshGeneration) {
+      throw new Error("Authentication state changed before refresh");
+    }
+
     const response = await fetch(`${apiBaseUrl}/auth/refresh`, {
       method: "POST",
       credentials: "include",
@@ -76,7 +91,7 @@ export function refreshAccessToken(): Promise<AuthSessionResponse> {
 
     accessToken = session.accessToken;
     return session;
-  })().finally(() => {
+  }).finally(() => {
     refreshPromise = null;
   });
 
@@ -87,15 +102,18 @@ export async function logout(): Promise<void> {
   authGeneration += 1;
   signedOut = true;
   clearAccessToken();
+  notifyRemoteLogout();
 
   try {
-    const response = await fetch(`${apiBaseUrl}/auth/logout`, {
-      method: "POST",
-      credentials: "include",
+    await withAuthCookieLock(async () => {
+      const response = await fetch(`${apiBaseUrl}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        await readJsonResponse<never>(response);
+      }
     });
-    if (!response.ok) {
-      await readJsonResponse<never>(response);
-    }
   } finally {
     clearAccessToken();
   }

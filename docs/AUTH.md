@@ -8,11 +8,11 @@ The template includes an optional, self-hosted JWT authentication module under `
 - Passwords use Bun's asynchronous `Bun.password` API with Argon2id.
 - Access tokens are short-lived JWTs sent as `Authorization: Bearer <token>`.
 - Refresh tokens are longer-lived JWTs stored in an HttpOnly cookie.
-- Refresh sessions are persisted in PostgreSQL so logout and refresh-token rotation can revoke them.
+- Refresh sessions are persisted in PostgreSQL so logout and refresh-token rotation can revoke them. Logout revokes the entire session family, including descendants of a rotated cookie.
 - Rotated refresh sessions belong to a session family. Replaying an already-rotated refresh token revokes active descendants in that family.
 - Expired session rows are pruned periodically; the interval is configurable through `AUTH_SESSION_PRUNE_INTERVAL_SECONDS`.
 - Access tokens remain stateless and are intentionally not checked against the database on every request.
-- Refresh tokens rotate on every successful refresh.
+- Refresh tokens rotate on every successful refresh. Refresh, replay handling and logout are serialized per family using a PostgreSQL transaction-scoped advisory lock, including across API instances.
 - The browser helper keeps the access token in memory instead of localStorage.
 
 ## Endpoints
@@ -85,6 +85,7 @@ The client intentionally:
 - keeps the access token only in memory;
 - rejects authenticated requests whose URL origin differs from the configured API origin before attaching the Bearer token or cookies;
 - coalesces concurrent `401` responses into a single refresh request, then retries each original request at most once;
+- serializes cookie-mutating operations between tabs using browser Web Locks when supported; a BroadcastChannel/storage signal invalidates access tokens in other tabs on logout. Older browsers fall back to single-tab coordination and can still experience refresh replay under simultaneous tabs; the server always revokes the session family on logout;
 - clears local auth state immediately on logout and prevents an in-flight refresh from restoring a token after logout;
 - preserves the API error contract through `ApiError`, including HTTP status, stable error code, message, and request ID.
 

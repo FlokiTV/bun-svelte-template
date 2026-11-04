@@ -1,4 +1,4 @@
-import { and, eq, gt, isNull, lt } from "drizzle-orm";
+import { and, eq, gt, isNull, lt, sql } from "drizzle-orm";
 import { getDb } from "../../db/client";
 import { authSessions, users } from "../../db/schema";
 
@@ -41,6 +41,19 @@ export async function rotateSessionRecord(input: {
   nextExpiresAt: Date;
 }): Promise<RotateSessionRecordResult> {
   return getDb().transaction(async (tx) => {
+    const [session] = await tx
+      .select({ familyId: authSessions.familyId })
+      .from(authSessions)
+      .where(
+        and(eq(authSessions.id, input.currentSessionId), eq(authSessions.userId, input.userId)),
+      )
+      .limit(1);
+    if (!session) return "invalid";
+
+    // Serialize refresh/replay/logout within a family, including across API instances.
+    // The advisory lock is transaction-scoped; collisions only add contention.
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${session.familyId}))`);
+
     const now = new Date();
     const [revoked] = await tx
       .update(authSessions)
@@ -87,11 +100,32 @@ export async function rotateSessionRecord(input: {
   });
 }
 
-export async function revokeSession(id: string): Promise<void> {
-  await getDb()
-    .update(authSessions)
-    .set({ revokedAt: new Date() })
-    .where(and(eq(authSessions.id, id), isNull(authSessions.revokedAt)));
+export async function revokeSessionFamilyBySessionId(
+  sessionId: string,
+  userId: string,
+): Promise<void> {
+  await getDb().transaction(async (tx) => {
+    const [session] = await tx
+      .select({ familyId: authSessions.familyId })
+      .from(authSessions)
+      .where(and(eq(authSessions.id, sessionId), eq(authSessions.userId, userId)))
+      .limit(1);
+    if (!session) return;
+
+    // The same lock is acquired during refresh, so a newly inserted descendant
+    // cannot escape revocation even when refresh and logout race.
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${session.familyId}))`);
+    await tx
+      .update(authSessions)
+      .set({ revokedAt: new Date() })
+      .where(
+        and(
+          eq(authSessions.familyId, session.familyId),
+          eq(authSessions.userId, userId),
+          isNull(authSessions.revokedAt),
+        ),
+      );
+  });
 }
 
 export async function pruneExpiredSessions(before = new Date()): Promise<number> {
