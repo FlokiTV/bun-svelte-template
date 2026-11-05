@@ -4,7 +4,7 @@
 - Pasta de trabalho: D:\DEV\bun-svelte-template
 
 ## Pedido atual do usuário
-"Vamos matar tudo": preparar fundação do template para lançamento SaaS sem inventar produto, provedor de cobrança, domínio ou credenciais. Implementar telas de acesso/área privada e referência de deploy/segurança/backup, testes e CI. Não executar deploy real nem criar agendamentos sem configuração concreta.
+Confirmou que o repositório é um **template**, não um SaaS comercial. Escolheu licença MIT e dispensou explicitamente ativar a opção "GitHub Template" no GitHub. Escopo desta rodada: adicionar LICENSE MIT e documentar no README; não mudar configuração do GitHub nem criar automações.
 
 ## Board e card
 - Board atual: board_c4d6626e-b0c1-4caf-be14-6debb28a87c1 — SaaS launch readiness (active).
@@ -13,6 +13,12 @@
 - Board anterior: board_ed4e58d7-34ba-4d52-922b-dc4694e6dfc5 — DB isolation & auth races (done; CI 41870016977 SUCCESS).
 - Board de remediação undici: board_e94c8eca-d9d4-4cbc-b6b6-248243dadc98 (done).
 - Board histórico de migração Rspack: board_5be0dd95-c8a7-45a4-ab34-b90610aaef5e (done).
+
+## Licença e distribuição do template — 2026-11-05
+- Usuário escolheu MIT; arquivo LICENSE criado com copyright 2026 FlokiTV e README atualizado.
+- Usuário dispensou GitHub Template; não alterar isTemplate nem atribuir isso como requisito de distribuição.
+- O produto de cada projeto derivado do template (planos, billing, LGPD e demais regras comerciais) é responsabilidade de quem clonar e não bloqueia distribuir o template.
+- Próximo passo exato: validar diff, publicar commit somente documental e confirmar main sincronizada.
 
 ## SaaS launch readiness — 2026-11-04
 - Pedido: "vamos matar tudo" após auditoria mostrar que repositório é template, não SaaS. Objetivo operacional: implementar somente fundação genérica sem inventar o produto nem fazer deploy real.

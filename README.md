@@ -279,3 +279,7 @@ O template fecha a infraestrutura genérica com:
 A partir desta versão, funcionalidades como filas, Redis, storage, e-mail, pagamentos e analytics entram apenas quando o produto exigir.
 
 Veja `docs/OPERATIONS.md` e `docs/SECURITY.md`.
+
+## Licença
+
+Este projeto é distribuído sob a [licença MIT](LICENSE). É possível usar, adaptar e redistribuir o template conforme os termos dessa licença. A opção **Use this template** no GitHub não é necessária para clonar ou reutilizar o repositório.
